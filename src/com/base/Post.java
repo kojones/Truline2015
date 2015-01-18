@@ -1,0 +1,170 @@
+package com.base;
+/**
+
+create table post (
+ TRACKABBR  							  VARCHAR2(3) NOT NULL ,
+ RACEDATE   							  DATE NOT NULL,
+ RACENO 								  NUMBER NOT NULL,
+ POSTPOSITION   						  NUMBER NOT NULL,
+ ENTRY									  CHAR(1),
+ HORSENAME  							  VARCHAR2(25),
+ EQUIPMENTCHG   						  VARCHAR2(12)
+	 CHECK (EQUIPMENTCHG IN ('Blinkers on', 'Blinkers off')), 
+ LASIX  								  CHAR(1),
+ BUTE   								  CHAR(1),
+ OWNER  								  VARCHAR2(40),
+ TRAINER								  VARCHAR2(30),
+ TRAINERSTARTS  						  NUMBER,
+ TRAINERWINS							  NUMBER,
+ TRAINERPLACES  						  NUMBER,
+ TRAINERSHOWS   						  NUMBER,
+ JOCKEY 								  VARCHAR2(30),
+ JOCKEYSTARTS   						  NUMBER,
+ JOCKEYWINS 							  NUMBER,
+ JOCKEYPLACES   						  NUMBER,
+ JOCKEYSHOWS							  NUMBER,
+ WEIGHTALLOW							  NUMBER,
+ RUNSTYLE   							  VARCHAR2(3),
+ QUIRIN 								  NUMBER,
+ PASEPAR2F  							  NUMBER,
+ PASEPAR4F  							  NUMBER,
+ PASEPAR6F  							  NUMBER,
+ SPEEDPAR   							  NUMBER,
+ LATEPASEPAR							  NUMBER,
+ DAYSSINCELAST  						  NUMBER,
+ CLAIMINGPURSE  						  NUMBER,
+ LRDSTARTS  							  NUMBER,
+ LRDWIN 								  NUMBER,
+ LRDPLACE   							  NUMBER,
+ LRDSHOW								  NUMBER,
+ LRDEARNINGS							  NUMBER,
+ LRTSTARTS  							  NUMBER,
+ LRTWIN 								  NUMBER,
+ LRTPLACE   							  NUMBER,
+ LRTSHOW								  NUMBER,
+ LRTEARNINGS							  NUMBER,
+ LRTURFSTARTS   						  NUMBER,
+ LRTURFWIN  							  NUMBER,
+ LRTURFPLACE							  NUMBER,
+ LRTURFSHOW 							  NUMBER,
+ LRTURFEARNINGS 						  NUMBER,
+ LRWETSTARTS							  NUMBER,
+ LRWETWIN   							  NUMBER,
+ LRWETPLACE 							  NUMBER,
+ LRWETSHOW  							  NUMBER,
+ LRWETEARNINGS  						  NUMBER,
+ LATESTYEAR 							  NUMBER,
+ LATESTYEARSTARTS   					  NUMBER,
+ LATESTYEARWIN  						  NUMBER,
+ LATESTYEARPLACE						  NUMBER,
+ LATESTYEARSHOW 						  NUMBER,
+ LATESTYEAREARNINGS 					  NUMBER,
+ PREVIOUSYEAR   						  NUMBER,
+ PREVIOUSYEARSTART  					  NUMBER,
+ PREVIOUSYEARWIN						  NUMBER,
+ PREVIOUSYEARPLACE  					  NUMBER,
+ PREVIOUSYEARSHOW   					  NUMBER,
+ PREVIOUSYEAREARNINGS   				  NUMBER,
+ LIFETIMESTARTS 						  NUMBER,
+ LIFETIMEWIN							  NUMBER,
+ LIFETIMEPLACE  						  NUMBER,
+ LIFETIMESHOW   						  NUMBER,
+ LIFETIMEEARNINGS   					  NUMBER,
+ COMMENTS				  LONG,
+constraint post_pk  PRIMARY KEY (TRACKABBR, RACEDATE, RACENO, POSTPOSITION),
+constraint post_rf1 FOREIGN KEY (TRACKABBR, RACEDATE, RACENO)
+			REFERENCES race (TRACKABBR, RACEDATE, RACENO)
+			ON DELETE CASCADE,
+constraint post_rf2 FOREIGN KEY (HORSENAME)
+			REFERENCES horse (HORSENAME)
+);
+*/
+
+import com.base.Handicap;
+import com.base.Horse;
+import com.base.Workout;
+
+import java.util.*;
+
+class Post
+{
+ String     m_track;
+ Date       m_raceDate;
+ int        m_raceNo;
+ int        m_postPosition;
+ String     cloth                = null;
+ Properties m_props              = new Properties();
+ String     m_horseName          = null;
+ String     m_horseNameP         = null;
+ int        m_weight             = 0;
+ int        m_age                = 0;
+ int        m_topRanks           = 0;
+ int        m_pointsAdv          = 0;
+ int        m_betfactors         = 0;
+ int        m_jkyfactors         = 0;
+ int        m_trnfactors         = 0;
+ int        m_biasRank           = 0;
+ String     m_betfactorsPR       = "";
+ String     m_jkyfactorsPR       = "";
+ String     m_trnfactorsPR       = "";
+ String     m_morningLine        = "";
+ String     m_truLine            = "";
+ String     m_truLineDO          = "";
+ String     m_repRaceDtl         = "";
+ String     m_repRacePurseComp   = "";
+ String     m_formCycle          = "";
+ String     m_formCycle2         = "";
+ String     m_formCycle3         = "";
+ String     m_trainerName        = "";
+ String     m_trainerNamePT      = "";
+ String     m_jockeyName         = "";
+ String     m_sex                = "";
+ String[]   horseFlows           = { " ", " ", " ", " ", " ", " ", " ", " ",
+   " ", " ",  " ", " ", " ", " ", " ", " ", " ", " ",
+   " ", " "    };
+ int        cntHorseFlows        = -1;
+ String     m_sireName           = "";
+ String     m_sireAWD            = "";
+ String     m_damName            = "";
+ String     m_damAWD             = "";
+ String     m_damSireName        = "";
+ String     m_damSireAWD         = "";
+ String     m_sireSireName       = "";
+ String     m_whereBred          = "";
+ String     m_sireTS             = "";
+ String     m_sireTSp            = "";
+ String     m_sireTS2            = "";
+ String     m_sireTSPI           = "";
+ String     m_sireTSPI2          = "";
+ String     m_sireTSPI3          = "";
+ String     m_otherFactors       = "";
+ String     m_kimsPT             = "";
+ String     m_kimsT1             = "";
+ String     m_kimsT2             = "";
+ String     m_kimsT3             = "";
+ String     m_kimsT4             = "";
+ String     m_kimsJ1             = "";
+ String     m_kimsEPS            = "";
+ String     m_kimsTT             = "";
+ String     m_kimsCS             = "";
+ String     m_ownerTrn           = "";
+ String     m_ownerBrd           = "";
+ String     m_trnJkyPct          = "";
+ String     m_trnJkyStat         = "";
+ String     m_bias               = "";
+ int        m_biasN              = 0;
+ String     m_finishPos          = "";
+ String     m_odds               = "";
+ String     m_winPayoff          = "";
+ String     m_placePayoff        = "";
+ String     m_showPayoff         = "";
+ Horse      m_horse              = new Horse();
+ Workout    m_work[]             = new Workout[12];
+ Vector     m_performances       = new Vector();
+ Vector     m_trainerJockeyStats = new Vector();
+ Handicap   m_handicap           = null;
+ public Post() {
+  for (int i = 0; i < m_work.length; i++)
+   m_work[i] = new Workout();
+ }
+}
