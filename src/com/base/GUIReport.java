@@ -268,6 +268,7 @@ public void writeReport(GUI out, Race race)
     break;
   }
   out.println();
+  out.println("         Run Style Profile  " + race.m_runStyleProfile);
   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
    int cnt = 0;
    while (cnt <= race.cntRaceFlows) {
@@ -276,9 +277,9 @@ public void writeReport(GUI out, Race race)
    }
   }
   out
-    .println("=======================================================================================");
+    .println("=============================================================================================");
   out
-  .println("    #  Horse             RR      EPS  EN    FS   TT    SS   CS    FT  AS  RE QP TP  ML");
+  .println("      #  Horse              RS RR      EPS  EN    FS   TT    SS   CS    FT  AS  RE QP TP  ML");
   if (Truline.userProps.getProperty("TrackTheBias", "N").equals("1")
     || Truline.userProps.getProperty("TrackTheBias", "N").equals("2")) {
    biasBonus = 0;
@@ -294,7 +295,7 @@ public void writeReport(GUI out, Race race)
    biasPts[10] = "" + biasBonus;
    biasPtsD[10] = "" + biasBonusD;
   out
-  .println("       Total Bias                "
+  .println("         Total Bias                    "
     + Lib.rjust(biasPts[Handicap.EPS], 3)
     + Lib.rjust(biasPts[Handicap.EN], 4) + Lib.rjust(biasPts[Handicap.FS], 6)
     + Lib.rjust(biasPts[Handicap.TT], 5) + Lib.rjust(biasPts[Handicap.SS], 6)
@@ -303,7 +304,7 @@ public void writeReport(GUI out, Race race)
     + Lib.rjust(biasPts[Handicap.QP], 3) + Lib.rjust(biasPts[10], 3)
     );
   out
-  .println("       Total Bias (distance)     "
+  .println("         Total Bias (distance)         "
     + Lib.rjust(biasPtsD[Handicap.EPS], 3)
     + Lib.rjust(biasPtsD[Handicap.EN], 4) + Lib.rjust(biasPtsD[Handicap.FS], 6)
     + Lib.rjust(biasPtsD[Handicap.TT], 5) + Lib.rjust(biasPtsD[Handicap.SS], 6)
@@ -318,8 +319,8 @@ public void writeReport(GUI out, Race race)
    Post post = (Post) e.nextElement();
    String entry = post.m_props.getProperty("ENTRY", "");
    if (entry.equals("S")) {
-    out.println("   " + Lib.pad(post.cloth, 4) + Lib.pad(post.m_horseName, 16)
-      + "  SCRATCHED");
+    out.println("     " + Lib.pad(post.cloth, 4) + Lib.pad(post.m_horseName, 16)
+      + "      SCRATCHED");
     continue;
    }
    if (post.m_handicap == null || post.m_horseName == null
@@ -376,9 +377,9 @@ public void writeReport(GUI out, Race race)
     repRaceDate = Lib.datetoa(post.m_handicap.m_repRace.ppRaceDate);
    else
     repRaceDate = "00/00";
-   out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1)
+   out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1) + "  "
      + Lib.pad(post.m_ownerTrn, 1) + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1)
-     + Lib.pad(post.m_horseNameP, 18) + Lib.pad(repRaceDate, 5)
+     + Lib.pad(post.m_horseNameP, 19) + Lib.pad(post.m_runStyle, 3) + Lib.pad(repRaceDate, 5)
      + Lib.rjust(post.m_handicap.value[Handicap.EPS], 6)
      + Lib.rjust(post.m_handicap.value[Handicap.EN], 4, 1)
      + ((post.m_handicap.extraFlg) ? "#" : " ")
@@ -405,10 +406,10 @@ public void writeReport(GUI out, Race race)
 */
    int jpcnt = (jstart > 0) ? (jwin) * 100 / jstart : 0;
    int tpcnt = (tstart > 0) ? (twin) * 100 / tstart : 0;
-   out.println(Lib.pad(post.m_sireTSPI3, 2) +  Lib.pad(post.m_betfactorsPR, 3)
+   out.println(Lib.pad(post.m_sireTSPI3, 2) +  Lib.pad(post.m_betfactorsPR, 3) + "  "
      + Lib.pad(post.m_trainerNamePT, 2)
      + Lib.pad(post.m_props.getProperty("TRAINER", "").toLowerCase(), 14)
-     + Lib.pad(post.m_trnfactorsPR, 4)
+     + Lib.pad(post.m_trnfactorsPR, 8)
      + Lib.rjust((double) tstart, 3) + "/"
      + Lib.pad(Lib.ftoa((double) tpcnt, 0) + "%", 4)
      + Lib.rjust(post.m_handicap.rank[Handicap.EPS], 3)
@@ -422,9 +423,9 @@ public void writeReport(GUI out, Race race)
      + Lib.rjust(post.m_handicap.rank[Handicap.RE], 4)
      + Lib.rjust(post.m_handicap.rank[Handicap.QP], 3)
      + Lib.rjust(post.m_handicap.bonusRank, 3) + Lib.rjust(finishPosPrt, 5));
-   out.println("" + Lib.pad(post.m_trnJkyPct, 7)
+   out.println("" + Lib.pad(post.m_trnJkyPct, 7) + "  "
      + Lib.pad(post.m_props.getProperty("JOCKEY", "").toLowerCase(), 14)
-     + Lib.pad(post.m_jkyfactorsPR, 4)
+     + Lib.pad(post.m_jkyfactorsPR, 8)
      + Lib.rjust((double) jstart, 3) + "/"
      + Lib.pad(Lib.ftoa((double) jpcnt, 0) + "%", 4)
      + Lib.rjust(biasPts[Handicap.EPS], 3)
@@ -439,7 +440,7 @@ public void writeReport(GUI out, Race race)
     .println(" # = Must Bet Energy or Power Trainer / $ = Turf Sire / d = Dam Sire / * = Trainer-Owner");
   out.println();
   out
-    .println("========================= Recap of Top Ranked Horses ==================================");
+    .println("=============================== Recap of Top Ranked Horses ==================================");
   out.println("Track "
     + Lib.pad(race.m_track, 3)
     + "    "
@@ -643,26 +644,28 @@ public void writeReport(GUI out, Race race)
    if (i >= 5 && post.m_biasN == 0 && post.m_handicap.bonus + post.m_handicap.points < pts)
     continue;
    else {
-   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+   // if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
     out.print("           ");
     out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1)
       + Lib.pad(post.m_trainerNamePT.substring(1), 1) + Lib.pad(post.m_ownerTrn, 1)
       + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseName, 16)
-      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5)
+      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5) + " " + Lib.pad(post.m_runStyle, 3)
       + Lib.rjust(post.m_truLine, 6)
       + Lib.pad(" (" + post.m_morningLine + post.m_truLineDO + ")" + Adv20, 15)
       + Lib.pad(post.m_bias, 10));
+   /*
    }
    else {
     out.print("           ");
     out.println(Lib.pad(post.m_sireTS, 1) + Lib.pad(post.m_sireTS2, 1)
       + Lib.pad(post.m_trainerNamePT.substring(1), 1) + Lib.pad(post.m_ownerTrn, 1)
       + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseName, 16)
-      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5)
+      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5) + " " + Lib.pad(post.m_runStyle, 3)
       + Lib.rjust(((j < 6) ? odds[j] : ""), 6)
       + Lib.pad("(" + post.m_morningLine + DO + ")" + Adv20, 10)
       + Lib.pad(post.m_bias, 10));
    }
+   */
    }
    i++;
   }

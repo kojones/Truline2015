@@ -466,7 +466,7 @@ private void saveResult(Race race)
   if (post.m_finishPos.equals(""))
    post.m_finishPos = "99";
   String xrdLine = race.m_track + "," + race.m_props.getProperty("RACEDATE") + ","
-    + race.m_raceNo + ",," + race.m_surfaceLC + ",,,,,,,,,,,," + race.m_trackCond + ","
+    + race.m_raceNo + ",," + "$,,,,,,,,,,,," + race.m_trackCond + ","
     + post.m_postPosition + ",,\"" + post.m_horseName + "\",,,,,,,,,,"
     + (post.m_props.getProperty("ENTRY", " ").equals("S") ? "," : post.m_finishPos+",")
     + ",,,,,,0.00,,,,,,,,,,,,," 

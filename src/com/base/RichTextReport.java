@@ -511,7 +511,7 @@ public void generateHF(String filename, Bris bris, boolean print)
      + "                ");
    out.println("\\par [" + Truline.version + "] " + Truline.copyright);
    out
-     .println("\\par ======================================+=====================================================");
+     .println("\\par ===============================================================================================");
    out.println("\\par TrackDate " + filename + "    No Peripheral Information Indicators today");
   }
   out.println("}");
@@ -577,7 +577,7 @@ public void generateHF(String filename, BrisMCP brisMCP, boolean print)
      + "                ");
    out.println("\\par [" + Truline.version + "] " + Truline.copyright);
    out
-     .println("\\par ======================================+=====================================================");
+     .println("\\par ============================================================================================");
    out.println("\\par TrackDate " + filename + "    No Peripheral Information Indicators today");
   }
   out.println("}");
@@ -643,7 +643,7 @@ public void generateHF(String filename, BrisJCP brisJCP, boolean print)
      + "                ");
    out.println("\\par [" + Truline.version + "] " + Truline.copyright);
    out
-     .println("\\par ======================================+=====================================================");
+     .println("\\par ============================================================================================");
    out.println("\\par TrackDate " + filename + "    No Peripheral Information Indicators today");
   }
   out.println("}");
@@ -1018,16 +1018,16 @@ private void fontSetup(PrintWriter out)
  fontsize = Lib.atoi(Truline.userProps.getProperty("FontSize", "8"));
  switch (fontsize) {
   case 7:
-   out.print("\\margl864\\margr864\\margt864\\margb864\\f2\\fs14\\cf0");
+   out.print("\\margl720\\margr720\\margt720\\margb720\\f2\\fs14\\cf0");
    // pagesize = 70;
    break;
   case 9:
-   out.print("\\margl864\\margr864\\margt864\\margb864\\f2\\fs18\\cf0");
+   out.print("\\margl720\\margr720\\margt720\\margb720\\f2\\fs18\\cf0");
    // pagesize = 61;
    break; 
   default:
   case 8:
-   out.print("\\margl864\\margr864\\margt864\\margb864\\f2\\fs16\\cf0");
+   out.print("\\margl720\\margr720\\margt720\\margb720\\f2\\fs16\\cf0");
    // pagesize = 67;
    break;
   case 12:
@@ -1057,7 +1057,7 @@ public void writeReport(PrintWriter out, Race race)
     + "                " + datestr);
   out.println("\\par [" + Truline.version + "] " + Truline.copyright);
   out
-    .println("\\par ======================================+=====================================================");
+    .println("\\par ===================================================================================================");
   out.println("\\par Track "
     + Lib.pad(race.m_track, 3)
     + "    "
@@ -1137,6 +1137,7 @@ public void writeReport(PrintWriter out, Race race)
     break;
   }
   out.println();
+  out.println("\\par          Run Style Profile  " + race.m_runStyleProfile);
   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
    int cnt = 0;
    while (cnt <= race.cntRaceFlows) {
@@ -1145,9 +1146,9 @@ public void writeReport(PrintWriter out, Race race)
    }
   }
   out
-    .println("\\par =============================================================================================");
+    .println("\\par ===================================================================================================");
   out
-    .println("\\par     #  Horse             RR      EPS  EN    FS   TT    SS   CS    FT  AS  RE QP TP  ML  ODDS");
+    .println("\\par       #  Horse              RS RR      EPS  EN    FS   TT    SS   CS    FT  AS  RE QP TP  ML  ODDS");
   if (Truline.userProps.getProperty("TrackTheBias", "N").equals("1")
     || Truline.userProps.getProperty("TrackTheBias", "N").equals("2")) {
    biasBonus = 0;
@@ -1181,7 +1182,7 @@ public void writeReport(PrintWriter out, Race race)
    biasPts[10] = "" + biasBonus;
    biasPtsD[10] = "" + biasBonusD;
    out
-   .println("\\par        Total Bias                "
+   .println("\\par          Total Bias                    "
      + Lib.rjust(biasPts[Handicap.EPS], 3)
      + Lib.rjust(biasPts[Handicap.EN], 4) + Lib.rjust(biasPts[Handicap.FS], 6)
      + Lib.rjust(biasPts[Handicap.TT], 5) + Lib.rjust(biasPts[Handicap.SS], 6)
@@ -1190,7 +1191,7 @@ public void writeReport(PrintWriter out, Race race)
      + Lib.rjust(biasPts[Handicap.QP], 3) + Lib.rjust(biasPts[10], 3)
      );
    out
-   .println("\\par        Total Bias (distance)     "
+   .println("\\par          Total Bias (distance)         "
      + Lib.rjust(biasPtsD[Handicap.EPS], 3)
      + Lib.rjust(biasPtsD[Handicap.EN], 4) + Lib.rjust(biasPtsD[Handicap.FS], 6)
      + Lib.rjust(biasPtsD[Handicap.TT], 5) + Lib.rjust(biasPtsD[Handicap.SS], 6)
@@ -1208,10 +1209,11 @@ public void writeReport(PrintWriter out, Race race)
    biasBonusD = 0;
    biasPtsD[10] = "";
    Post post = (Post) e.nextElement();
+   String bold_cloth = "\\b"+post.cloth+"\\b0";
    String entry = post.m_props.getProperty("ENTRY", "");
    if (entry.equals("S")) {
-    out.println("\\par    " + Lib.pad(post.cloth, 4)
-      + Lib.pad(post.m_horseName, 16) + "  SCRATCHED");
+    out.println("\\par      " + Lib.pad(post.cloth, 4)
+      + Lib.pad(post.m_horseName, 16) + "      SCRATCHED");
     line++;
     continue;
    }
@@ -1308,9 +1310,9 @@ public void writeReport(PrintWriter out, Race race)
    else
     repRaceDate = "00/00";
    out.println("\\par " + Lib.pad(post.m_sireTSp, 1)
-     + Lib.pad(post.m_sireTS2, 1) + Lib.pad(post.m_ownerTrn, 1)
-     + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseNameP, 18)
-     + Lib.pad(repRaceDate, 5)
+     + Lib.pad(post.m_sireTS2, 1) + "  " + Lib.pad(post.m_ownerTrn, 1)
+     + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseNameP, 19)
+     + Lib.pad(post.m_runStyle, 3) + Lib.pad(repRaceDate, 5)
      + Lib.rjust(post.m_handicap.value[Handicap.EPS], 6)
      + Lib.rjust(post.m_handicap.value[Handicap.EN], 4, 1)
      + ((post.m_handicap.extraFlg) ? "#" : " ")
@@ -1338,10 +1340,10 @@ public void writeReport(PrintWriter out, Race race)
 */   
    int jpcnt = (jstart > 0) ? (jwin) * 100 / jstart : 0;
    int tpcnt = (tstart > 0) ? (twin) * 100 / tstart : 0;
-   out.println("\\par " + Lib.pad(post.m_sireTSPI3, 2) +  Lib.pad(post.m_betfactorsPR, 3)
+   out.println("\\par " + Lib.pad(post.m_sireTSPI3, 2) +  Lib.pad(post.m_betfactorsPR, 3) + "  "
      + Lib.pad(post.m_trainerNamePT, 2)
      + Lib.pad(post.m_props.getProperty("TRAINER", "").toLowerCase(), 14)
-     + Lib.pad(post.m_trnfactorsPR, 4)
+     + Lib.pad(post.m_trnfactorsPR, 8)
      + Lib.rjust((double) tstart, 3) + "/"
      + Lib.pad(Lib.ftoa((double) tpcnt, 0) + "%", 4)
      + Lib.rjust(post.m_handicap.rank[Handicap.EPS], 3)
@@ -1355,9 +1357,9 @@ public void writeReport(PrintWriter out, Race race)
      + Lib.rjust(post.m_handicap.rank[Handicap.RE], 4)
      + Lib.rjust(post.m_handicap.rank[Handicap.QP], 3)
      + Lib.rjust(post.m_handicap.bonusRank, 3) + Lib.rjust(finishPosPrt, 5));
-   out.println("\\par " + Lib.pad(post.m_trnJkyPct, 7)
+   out.println("\\par " + Lib.pad(post.m_trnJkyPct, 7) + "  "
      + Lib.pad(post.m_props.getProperty("JOCKEY", "").toLowerCase(), 14)
-     + Lib.pad(post.m_jkyfactorsPR, 4)
+     + Lib.pad(post.m_jkyfactorsPR, 8)
      + Lib.rjust((double) jstart, 3) + "/"
      + Lib.pad(Lib.ftoa((double) jpcnt, 0) + "%", 4)
      + Lib.rjust(biasPts[Handicap.EPS], 3)
@@ -1373,7 +1375,7 @@ public void writeReport(PrintWriter out, Race race)
     .println("\\par  # = Must Bet Energy or Power Trainer / $ = Turf Sire / d = Dam Sire / * = Trainer-Owner");
   out.println("\\par ");
   out
-    .println("\\par ============================== Recap of Top Ranked Horses ===================================");
+    .println("\\par ==================================== Recap of Top Ranked Horses ===================================");
   if (Truline.userProps.getProperty("ShowTidbits", "N").equals("Y")) {
    if (race.m_bettable1 == "N")
     out.println("\\par *** NON-BETTABLE RACE ***");
@@ -1528,7 +1530,7 @@ public void writeReport(PrintWriter out, Race race)
    if (i >= 5 && post.m_biasN == 0 && post.m_handicap.bonus + post.m_handicap.points < pts)
     continue;
    else {
-   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+   // if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
     if (i == 1) {
      out.print("\\par Track Condition ___________ ");
      line++;
@@ -1542,10 +1544,11 @@ public void writeReport(PrintWriter out, Race race)
     out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1)
       + Lib.pad(post.m_trainerNamePT.substring(1), 1) + Lib.pad(post.m_ownerTrn, 1)
       + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseName, 16)
-      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5)
+      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5) + " " + Lib.pad(post.m_runStyle, 3)
       + Lib.rjust(post.m_truLine, 6)
       + Lib.pad("(" + post.m_morningLine + post.m_truLineDO + ")" + Adv20, 15)
       + Lib.pad(post.m_bias, 10));
+   /*
    }
    else {
     if (i == 1) {
@@ -1561,11 +1564,12 @@ public void writeReport(PrintWriter out, Race race)
     out.println(Lib.pad(post.m_sireTS, 1) + Lib.pad(post.m_sireTS2, 1)
       + Lib.pad(post.m_trainerNamePT.substring(1), 1) + Lib.pad(post.m_ownerTrn, 1)
       + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseName, 16)
-      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5)
+      + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5) + " " + Lib.pad(post.m_runStyle, 3)
       + Lib.rjust(((j < 6) ? odds[j] : ""), 6)
       + Lib.pad("(" + post.m_morningLine + DO + ")" + Adv20, 15)
       + Lib.pad(post.m_bias, 10));
    }
+   */
    }
    i++;
   }
@@ -1574,7 +1578,7 @@ public void writeReport(PrintWriter out, Race race)
    try {
     out.println("\\par ");
     out
-      .println("\\par ====================================== Trainer / Jockey Stats ===============================");
+      .println("\\par ========================================== Trainer / Jockey Stats =================================");
     out.println("\\par ");
     // Display stats for each horse.
     out.println("\\par                    " + Lib.pad("Category", 18)
@@ -1635,7 +1639,7 @@ public void writeReport(PrintWriter out, Race race)
    }
   out.println("\\par ");
   out
-    .println("\\par ========================================== Race Payoffs =====================================");
+    .println("\\par ============================================== Race Payoffs =======================================");
   out.println("\\par ");
   if (race.m_resultsPosted.equals("Y")) {
    out.println("\\par            1st  " + Lib.rjust(race.m_cloth1, 3)
@@ -1679,7 +1683,7 @@ public void writeReport(PrintWriter out, Race race)
      .println("\\par            TRIFECTA __________  DD ______________  OTHER ______________");
   }
   out
-    .println("\\par ==============================================================================================");
+    .println("\\par ===================================================================================================");
   out.println("\\par ");
   line += 14;
   out.println("\\page "); // Next page
@@ -1788,6 +1792,7 @@ public void writeHFReport(PrintWriter out, Race race)
     break;
   }
   out.println();
+  out.println("\\par          Run Style Profile  " + race.m_runStyleProfile);
   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
    int cnt = 0;
    while (cnt <= race.cntRaceFlows) {
@@ -1796,13 +1801,13 @@ public void writeHFReport(PrintWriter out, Race race)
    }
   }
   out
-  .println("\\par ===============================================================================================");
+  .println("\\par =================================================================================================");
   if (race.m_cntnrl > 0) {
     out.println("\\par *** CAUTION - " + race.m_cntnrl + " horses have no running line");
    if (race.m_cnt1st > 0)
     out.println("\\par *** CAUTION - " + race.m_cnt1st + " first time starter(s)");
    out
-   .println("\\par ===============================================================================================");
+   .println("\\par =============================================================================================");
   }
   out.println("\\par    #   Horse               PI INDICATORS                     Truline     ML     BIAS  FP   ODDS");
   out.println("\\par ");
@@ -1834,7 +1839,7 @@ public void writeHFReport(PrintWriter out, Race race)
    
    String kimsSummary = "TL"+post.m_handicap.bonusRank+
      (post.m_biasRank == 0 ? "" : "+BR"+post.m_biasRank)+
-     "+RS-"+post.m_props.getProperty("RUNSTYLE").trim()+
+     "+RS-"+post.m_runStyle.trim()+
      (post.m_kimsEPS.equals("") ? "" : "+"+post.m_kimsEPS)+
      (post.m_kimsPT.equals("") ? "" : "+"+post.m_kimsPT)+
      (post.m_kimsT1.equals("") ? "" : "+"+post.m_kimsT1)+
@@ -1873,7 +1878,7 @@ public void writeHFReport(PrintWriter out, Race race)
      + Lib.pad(post.m_sireTS2, 1) + Lib.pad(post.m_ownerTrn, 1)
      + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + FB1 + Lib.pad(post.m_horseNameP, 20) + FB2
      // + (post.m_repRaceDtl+"                                  ").substring(0, 34)
-     + "                                  "
+     + "  RS=" + Lib.pad(post.m_runStyle, 3) + "                          "
      + Lib.pad(horseRank+"/"+horsePoints+"/"+post.m_truLine, 10) 
      + Lib.rjust(DO1+post.m_morningLine+post.m_truLineDO+DO2,14) 
      + Lib.rjust(post.m_bias, 6) 
@@ -1881,10 +1886,12 @@ public void writeHFReport(PrintWriter out, Race race)
      + Lib.rjust(post.m_odds, 7));
    line++;
    
+   if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
    /*  Print Kims Summary */
-   out.println("\\par             "
-      + "Kims Summary="+kimsSummary
-      );
+    out.println("\\par             "
+       + "Kims Summary="+kimsSummary
+       );
+   }
    
    /*  Print Rep Race */
    out.println("\\par             "
@@ -1909,7 +1916,94 @@ public void writeHFReport(PrintWriter out, Race race)
     out.println("\\par             "
       + post.m_formCycle3
       );
-
+   
+   /*  Print Record at Today's Distance */
+   int starts = Lib.atoi(post.m_props.getProperty("LRDSTARTS", "0"));
+   int earnings = Lib.atoi(post.m_props.getProperty("LRDEARNINGS", "0"));
+   int EPS = 0;
+   if (starts > 0)
+    EPS = earnings / starts;
+   out.println("\\par             Lifetime at Today's Distance="
+     + post.m_props.getProperty("LRDSTARTS", "0")+"/"
+     + post.m_props.getProperty("LRDWINS", "0")+"/"
+     + post.m_props.getProperty("LRDPLACES", "0")+"/"
+     + post.m_props.getProperty("LRDSHOWS", "0")+"/"
+     + post.m_props.getProperty("LRDEARNINGS", "0")
+     + "/EPS=" + EPS
+      );
+   
+   /*  Print Record on Turf */
+   if (race.m_surface.equals("T"))
+   {
+    starts = Lib.atoi(post.m_props.getProperty("LRTURFSTARTS", "0"));
+    earnings = Lib.atoi(post.m_props.getProperty("LRTURFEARNINGS", "0"));
+    EPS = 0;
+    if (starts > 0)
+     EPS = earnings / starts;
+    out.println("\\par             Lifetime on Turf="
+      + post.m_props.getProperty("LRTURFSTARTS", "0")+"/"
+      + post.m_props.getProperty("LRTURFWINS", "0")+"/"
+      + post.m_props.getProperty("LRTURFPLACES", "0")+"/"
+      + post.m_props.getProperty("LRTURFSHOWS", "0")+"/"
+      + post.m_props.getProperty("LRTURFEARNINGS", "0")
+      + "/EPS=" + EPS
+       );
+   }
+   
+   /*  Print Record on All Weather Tracks */
+   if (race.m_surface.equals("A"))
+   {
+    starts = Lib.atoi(post.m_props.getProperty("LRAWESTARTS", "0"));
+    earnings = Lib.atoi(post.m_props.getProperty("LRAWEEARNINGS", "0"));
+    EPS = 0;
+    if (starts > 0)
+     EPS = earnings / starts;
+    out.println("\\par             Lifetime on All Weather Tracks="
+      + post.m_props.getProperty("LRAWESTARTS", "0")+"/"
+      + post.m_props.getProperty("LRAWEWINS", "0")+"/"
+      + post.m_props.getProperty("LRAWEPLACES", "0")+"/"
+      + post.m_props.getProperty("LRAWESHOWS", "0")+"/"
+      + post.m_props.getProperty("LRAWEEARNINGS", "0")
+      + "/EPS=" + EPS
+       );
+   }
+   
+   /*  Print Record on Fast Dirt Tracks */
+   if (race.m_surface.equals("D"))
+   {
+    starts = Lib.atoi(post.m_props.getProperty("LRDIRTSTARTS", "0"));
+    earnings = Lib.atoi(post.m_props.getProperty("LRDIRTEARNINGS", "0"));
+    EPS = 0;
+    if (starts > 0)
+     EPS = earnings / starts;
+    out.println("\\par             Lifetime on Fast Dirt Tracks="
+      + post.m_props.getProperty("LRDIRTSTARTS", "0")+"/"
+      + post.m_props.getProperty("LRDIRTWINS", "0")+"/"
+      + post.m_props.getProperty("LRDIRTPLACES", "0")+"/"
+      + post.m_props.getProperty("LRDIRTSHOWS", "0")+"/"
+      + post.m_props.getProperty("LRDIRTEARNINGS", "0")
+      + "/EPS=" + EPS
+       );
+   }
+   
+   /*  Print Record on Wet Tracks */
+   if (race.m_trackCond.equals("Off") && !race.m_surface.equals("A"))
+   {
+    starts = Lib.atoi(post.m_props.getProperty("LRWETSTARTS", "0"));
+    earnings = Lib.atoi(post.m_props.getProperty("LRWETEARNINGS", "0"));
+    EPS = 0;
+    if (starts > 0)
+     EPS = earnings / starts;
+    out.println("\\par             Lifetime on Wet Tracks="
+      + post.m_props.getProperty("LRWETSTARTS", "0")+"/"
+      + post.m_props.getProperty("LRWETWINS", "0")+"/"
+      + post.m_props.getProperty("LRWETPLACES", "0")+"/"
+      + post.m_props.getProperty("LRWETSHOWS", "0")+"/"
+      + post.m_props.getProperty("LRWETEARNINGS", "0")
+      + "/EPS=" + EPS
+       );
+   }
+    
    // Print other factors if present
    if (!post.m_otherFactors.equals(""))
     out.println("\\par             "

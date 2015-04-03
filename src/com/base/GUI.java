@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Enumeration;
+// import javax.swing.JFrame;
 
 import com.mains.Truline;
 public class GUI extends Frame implements ActionListener, Runnable
@@ -49,7 +50,7 @@ public class GUI extends Frame implements ActionListener, Runnable
  {
   // Create the display
   // width, height
-  setSize(new Dimension(300, 200));
+  setSize(new Dimension(320, 200));
   setLayout(new BorderLayout());
   setBackground(Color.white);
   addWindowListener(new WindowAdapter() {
@@ -88,15 +89,15 @@ public class GUI extends Frame implements ActionListener, Runnable
    ignoreRunLineMenuItem.setActionCommand("ignoreRunLine");
    ignoreRunLineMenuItem.addActionListener(this);
    fileMenu.add(ignoreRunLineMenuItem);
-   MenuItem printFlowBets = new MenuItem("Print PI Report All");
-   printFlowBets.setActionCommand("printFlowBets");
-   printFlowBets.addActionListener(this);
-   fileMenu.add(printFlowBets);
-   MenuItem printFlowBets1 = new MenuItem("Print PI Report Race");
-   printFlowBets1.setActionCommand("printFlowBets1");
-   printFlowBets1.addActionListener(this);
-   fileMenu.add(printFlowBets1);
   }
+  MenuItem printFlowBets = new MenuItem("Print PI Report All");
+  printFlowBets.setActionCommand("printFlowBets");
+  printFlowBets.addActionListener(this);
+  fileMenu.add(printFlowBets);
+  MenuItem printFlowBets1 = new MenuItem("Print PI Report Race");
+  printFlowBets1.setActionCommand("printFlowBets1");
+  printFlowBets1.addActionListener(this);
+  fileMenu.add(printFlowBets1);
   MenuItem changeSurfaceMenuItem = new MenuItem("Change Surface");
   changeSurfaceMenuItem.setActionCommand("changeSurface");
   changeSurfaceMenuItem.addActionListener(this);
@@ -128,7 +129,7 @@ public class GUI extends Frame implements ActionListener, Runnable
   aboutMenuItem.addActionListener(this);
   helpMenu.add(aboutMenuItem);
   menuBar.setHelpMenu(helpMenu);
-  display = new TextArea("", 40, 90, TextArea.SCROLLBARS_VERTICAL_ONLY);
+  display = new TextArea("", 40, 95, TextArea.SCROLLBARS_VERTICAL_ONLY);
   // Font displayFont = new Font("Lucida Sans", Font.PLAIN, 12);
   Font displayFont = new Font("Courier", Font.PLAIN, 12);
   display.setFont(displayFont);

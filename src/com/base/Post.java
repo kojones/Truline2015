@@ -104,6 +104,7 @@ class Post
  int        m_jkyfactors         = 0;
  int        m_trnfactors         = 0;
  int        m_biasRank           = 0;
+ int        m_quirin             = 0;
  String     m_betfactorsPR       = "";
  String     m_jkyfactorsPR       = "";
  String     m_trnfactorsPR       = "";
@@ -117,8 +118,11 @@ class Post
  String     m_formCycle3         = "";
  String     m_trainerName        = "";
  String     m_trainerNamePT      = "";
+ String     m_trainerNamePT1     = "";
+ String     m_trainerNamePT2     = "";
  String     m_jockeyName         = "";
  String     m_sex                = "";
+ String     m_runStyle           = "";
  String[]   horseFlows           = { " ", " ", " ", " ", " ", " ", " ", " ",
    " ", " ",  " ", " ", " ", " ", " ", " ", " ", " ",
    " ", " "    };

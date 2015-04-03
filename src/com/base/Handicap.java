@@ -255,7 +255,7 @@ public class Handicap
   race.m_distance = Lib.atoi(race.m_props.getProperty("DISTANCE"));
   if (race.m_distance < 0)
    race.m_distance = -race.m_distance;
-  if (race.m_surfaceResult.equals("")) {
+  if (race.m_surfaceResult.equals("") || race.m_surfaceResult.equals("$")) {
    race.m_surface = race.m_props.getProperty("SURFACE", "").toUpperCase();
    race.m_surfaceLC = race.m_props.getProperty("SURFACE", "");
   } else {
@@ -366,6 +366,7 @@ public class Handicap
   if (Truline.userProps.getProperty("TL2014", "N").equals("Yes")) {
    identifyOtherPIFactors(race);
    identifyFlowBets(race);
+   identifyRunStyle(race);
    identifyTrnFlowBets(race);
    identifyJkyFlowBets(race);
    identifyRaceFlowBets(race);
@@ -516,9 +517,15 @@ public class Handicap
    String ab = p.m_props.getProperty("ABOUT");
    boolean about = (ab != null && ab.equals("Y"));
    String chute = p.m_props.getProperty("CHUTE", "");
-   int runstyleJ = Lib.atoi(p.m_props.getProperty("PPRUNSTYLE", ""));
+   int runstyleJ = Lib.atoi(p.m_props.getProperty("PPRUNSTYLE", "-1"));
    String runstyle = "";
-   if (runstyleJ < 15)
+   if (runstyleJ == -1) {
+    runstyle = "NA";
+    runstyleJ = Lib.atoi(p.m_props.getProperty("RACESHAPE1", "99"));
+    if (runstyleJ != 99) 
+     runstyle = '"' + p.m_props.getProperty("RACESHAPE1", "") + " " + p.m_props.getProperty("RACESHAPE2", "") + '"'; 
+   }
+   else if (runstyleJ < 15)
     runstyle = "E";
    else if (runstyleJ < 30)
     runstyle = "EP";
@@ -581,11 +588,11 @@ public class Handicap
    if (cntForm < 5) {
     cntForm++;
     if (cntForm < 2)
-     post.m_formCycle = post.m_formCycle + (cntForm > 0 ? " / " : "") + formDays + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);  
+     post.m_formCycle = post.m_formCycle + (cntForm > 0 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);  
     else if (cntForm < 4)
-     post.m_formCycle2 = post.m_formCycle2 + (cntForm > 2 ? " / " : "") + formDays + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle2 = post.m_formCycle2 + (cntForm > 2 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
     else
-     post.m_formCycle3 = post.m_formCycle3 + (cntForm > 4 ? " / " : "") + formDays + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle3 = post.m_formCycle3 + (cntForm > 4 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1760 ? "SP-" : "RT-") + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
    }
    
    
@@ -1528,6 +1535,7 @@ public class Handicap
    Log.print("  Quirin Calculation for Post# " + post.m_postPosition
      + ", Horse: " + post.m_horseName + "\n");
   // Sort the past performances by race date.
+  int drfQuirin = post.m_quirin;
   Performance.qSort(post.m_performances);
   int points = 0;
   int position;
@@ -1644,7 +1652,7 @@ public class Handicap
   // if (scount == 6)
   // points += 6; // was leader at both calls in all three races (Sprint only)
   if (Log.isDebug(Log.TRACE))
-   Log.print("     Total Quirin Points=" + points + "\n");
+   Log.print("     Total Quirin Points=" + points + "/" + drfQuirin + "\n");
   return points;
  }
  /**
@@ -3040,6 +3048,55 @@ public class Handicap
   }
   return;
  }
+
+ /**
+  * Identify any horses that match previous profitable betting correlations
+  */
+ private static void identifyRunStyle(Race race)
+ {
+  if (Log.isDebug(Log.TRACE))
+   Log.print("\n  Identify Run Style Profile for race #"
+     + race.m_raceNo + "\n");
+  String race_surface = race.m_surface;
+  String distance = "";
+  String trackCond = "";
+  String surface = "";
+  String runStyle = "";
+  int cnt = 0;
+  for (Enumeration c = Truline.rs.elements(); c.hasMoreElements();) {
+   Properties prop = (Properties) c.nextElement();
+   String track = prop.getProperty("TRACK");
+   trackCond = prop.getProperty("TRACKCOND");
+   distance = prop.getProperty("DISTANCE");
+   surface = prop.getProperty("SURFACE");
+   runStyle = prop.getProperty("RUNSTYLE");
+   if (track.substring(2).equals("X"))
+    track = track.substring(0, 2);
+   // if (betFactorVersion1.equals(betFactorVersion)) {
+    if (track != null && track.equals(race.m_track)) {
+     if (distance == null
+       || ((distance.equals("R") && race.m_distance > 1760) || (distance
+         .equals("S") && race.m_distance < 1650) || distance.equals("M") &&
+         race.m_distance >= 1650 && race.m_distance <= 1760)) {
+      if (surface == null || surface.equals(race_surface)) {
+        if (trackCond == null || trackCond.equals(race.m_trackCond)) {
+         race.m_runStyleProfile = runStyle;
+         cnt++;
+        }
+     }
+    }
+   }
+  }
+  /*
+   * No run style stats if (cnt == 0)
+   */
+  if (Log.isDebug(Log.TRACE))
+   Log.print("   loaded " + cnt + " Run Style Profile for track " + race.m_track
+     + "\n");
+  if (cnt == 0)
+   return;
+ }
+ 
  /**
   * Identify any horses that match previous profitable betting correlations
   */
@@ -3054,6 +3111,8 @@ public class Handicap
   String distance = "";
   String surface = "";
   String roi = " ";
+  String roi$ = " ";
+  String pct = " ";
   String surfDist = " ";
   int points = 0;
   for (Enumeration c = Truline.pt.elements(); c.hasMoreElements();) {
@@ -3061,7 +3120,8 @@ public class Handicap
    trainer = prop.getProperty("TRAINER");
    distance = prop.getProperty("DISTANCE");
    surface = prop.getProperty("SURFACE");
-   // roi = prop.getProperty("ROI");
+   roi$ = prop.getProperty("ROI");
+   pct = prop.getProperty("PERCENT");
    int pointsW = Lib.atoi(prop.getProperty("POINTS"));
    if (post.m_trainerName != null) {
     if (post.m_trainerName.equals(trainer)) {
@@ -3069,6 +3129,7 @@ public class Handicap
       if (surface == null) {
        roi = "*";
        post.m_trainerNamePT = roi + "#";
+       post.m_trainerNamePT1 = " (" + pct + "%  $" + roi$ + ")";
        points += pointsW;
       }
      }
@@ -3079,6 +3140,7 @@ public class Handicap
         post.m_trainerNamePT = roi + "#";
         surfDist = "#";
         post.m_kimsPT = "PT";
+        post.m_trainerNamePT2 = " (" + pct + "%  $" + roi$ + ")";
         points += pointsW;
        }
       }
@@ -3103,12 +3165,12 @@ public class Handicap
      race.cntHorseFlows++;
      post.cntHorseFlows++;
      post.horseFlows[post.cntHorseFlows] = "\\b Power Trainer for "+
-       (roi.equals("*") ? "All Races" : "")+
+       (roi.equals("*") ? "All Races" + post.m_trainerNamePT1 : "")+
        (roi.equals("*") && surfDist.equals("#") ? " + " : "")+
-       ((surfDist.equals("#") && race.m_distance > 1759 && race.m_surface.equals("D")) ? "Dirt Routes" : "")+
-       ((surfDist.equals("#") && race.m_distance > 1759 && race.m_surface.equals("T")) ? "Turf Routes" : "")+
-       ((surfDist.equals("#") && race.m_distance < 1760 && race.m_surface.equals("D")) ? "Dirt Sprints" : "")+
-       ((surfDist.equals("#") && race.m_distance < 1760 && race.m_surface.equals("T")) ? "Turf Sprints" : "") + " \\b0"
+       ((surfDist.equals("#") && race.m_distance > 1759 && race.m_surface.equals("D")) ? "Dirt Routes" + post.m_trainerNamePT2 : "")+
+       ((surfDist.equals("#") && race.m_distance > 1759 && race.m_surface.equals("T")) ? "Turf Routes" + post.m_trainerNamePT2 : "")+
+       ((surfDist.equals("#") && race.m_distance < 1760 && race.m_surface.equals("D")) ? "Dirt Sprints" + post.m_trainerNamePT2 : "")+
+       ((surfDist.equals("#") && race.m_distance < 1760 && race.m_surface.equals("T")) ? "Turf Sprints" + post.m_trainerNamePT2 : "") + " \\b0"
        ;
     }
     return points;

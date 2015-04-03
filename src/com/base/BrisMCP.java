@@ -661,14 +661,14 @@ public class BrisMCP
    "LENGTHS1",
    "LENLDRMGN2",
    "LENGTHS2",
-   "",
+   "RACESHAPE1",
    "",
    "LENLDRMGN3",
    "LENGTHS3",
    "LENLDRMGN4",
    "LENGTHS4",
    // 756- 765 BRIS Race Shape - 2nd Call NUMERIC 999 3
-   "",
+   "RACESHAPE2",
    // 766- 775 BRIS 2f Pace Fig NUMERIC 999 3
    // 776- 785 BRIS 4f Pace Fig
    // 786- 795 BRIS 6f Pace Fig
@@ -724,7 +724,7 @@ public class BrisMCP
    "FRACTION2",
    "FRACTION3",
    "",
-   "",
+   "PPRUNSTYLE",
    "FINALTIME",
    // hundredths
    // 1046-1055 Claimed code CHARACTER X 1 c - claimed
@@ -897,7 +897,12 @@ public class BrisMCP
    // 1334 # Places (FAST Dirt) NUMERIC 99 2
    // 1335 # Shows (FAST Dirt) NUMERIC 99 2
    // 1336 Earnings (FAST Dirt) NUMERIC 99999999 8
-   "", "", "", "", "", "", "", "", "",
+   "", "", "", "",
+   "LRDIRTSTARTS",
+   "LRDIRTWINS",
+   "LRDIRTPLACES",
+   "LRDIRTSHOWS",
+   "LRDIRTEARNINGS",
    // 1337 Key Trnr Stat Category #1 CHARACTER X(16) 16
    // 1338 # of starts #1 NUMERIC 9999 4
    // 1339 Win% #1 NUMERIC 999.99 6
@@ -1225,14 +1230,16 @@ public class BrisMCP
         }
         if (name == "HORSENAME")
          horseData = true;
-        if (name == "WHEREBRED" || name == "MEDICATION")
+        if (name == "PROGRAMPOSTPOS" || name == "MEDICATION")
          horseData = false;
         if (name == "PPRACEDATE") {
          pastPerf = true;
          w_StartPP = fld;
         }
         if (name.length() > 6)
-         if (name.substring(0,7).equals("BARSHOE") || name.substring(0,7).equals("NOSEPAT")) {
+         if (name.substring(0,7).equals("BARSHOE") || name.substring(0,7).equals("NOSEPAT")
+           || name.substring(0,6).equals("LRDIRT")) 
+         {
           pastPerf = false;
          }
         if (name == "TRAINERCAT1") {
@@ -1243,6 +1250,7 @@ public class BrisMCP
          if (name.substring(0,10).equals("ALLWEATHER")) {
           trainerJockey = false;
          }
+
         if (pastPerf) {
          if (Log.isDebug(Log.PARSE1))
           Log.print(name + j + "=" + nameVal + "\n");
@@ -1354,7 +1362,9 @@ public class BrisMCP
        if (w_morningLine == null)
         post.m_morningLine = "";
        else {
-        if (w_morningLine.substring(w_morningLine.length() - 2).equals("00"))
+        if (w_morningLine.length() < 3)
+         w_morningLine = w_morningLine;
+        else if (w_morningLine.substring(w_morningLine.length() - 2).equals("00"))
          w_morningLine = w_morningLine.substring(0, w_morningLine.length() - 3);
         else if (w_morningLine.substring(w_morningLine.length() - 1)
           .equals("0"))
@@ -1410,6 +1420,8 @@ public class BrisMCP
        post.m_sex = post.m_horse.m_props.getProperty("SEX");
        post.m_trainerName = post.m_props.getProperty("TRAINER");
        post.m_jockeyName = post.m_props.getProperty("JOCKEY");
+       post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
+       post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");
        int idx1 = post.m_sireName.indexOf("(");
        if (idx1 > 0)
@@ -1536,15 +1548,15 @@ public class BrisMCP
          w_trackPP = perAll.m_props.getProperty("PPTRACKABBR" + j);
          if (w_trackPP == null)
           morePP = false;
-        } else
-         if (w_trackPP.length() > 2) {
+        } else {
+         if (w_trackPP.length() > 2)
           if (w_trackPP.equals("HOL"))
            w_trackPP = "BHP";
-          if (!w_trackPP.equals("AJX") && !w_trackPP.equals("FPX") && !w_trackPP.equals("PRX"))
-           if (w_trackPP.substring(2).equals("X") || w_trackPP.equals("FPK"))
-            w_trackPP = w_trackPP.substring(0, 2);
-         }
+         if (!w_trackPP.equals("AJX") && !w_trackPP.equals("FPX") && !w_trackPP.equals("PRX"))
+          if (w_trackPP.substring(2).equals("X") || w_trackPP.equals("FPK"))
+           w_trackPP = w_trackPP.substring(0, 2);
          morePP = false;
+        }
        }
       }
       // set up for new post position and past performance if not EOF

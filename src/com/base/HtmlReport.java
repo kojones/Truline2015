@@ -623,7 +623,7 @@ public HtmlReport() {
        DO = " DO";
       break;
     }
-    if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+    // if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
      out.println("<td>" + post.m_sireTS + post.m_sireTS2 + post.m_trainerNamePT
        + post.m_ownerTrn + "</td><td>" + post.cloth + "</td><td>"
        + post.m_horseName + "</td><td>"
@@ -631,7 +631,8 @@ public HtmlReport() {
        + "</td><td>" + post.m_truLine + "</td><td>("
        + post.m_morningLine + post.m_truLineDO + ")" + Adv20 + "</td><td>" + post.m_bias
        + "</td></tr>");
-    }
+   /* 
+   }
     else {
      out.println("<td>" + post.m_sireTS + post.m_sireTS2 + post.m_trainerNamePT
        + post.m_ownerTrn + "</td><td>" + post.cloth + "</td><td>"
@@ -641,6 +642,7 @@ public HtmlReport() {
        + post.m_morningLine + DO + ")" + Adv20 + "</td><td>" + post.m_bias
        + "</td></tr>");
     }
+    */
     i++;
    }
    out.println("</table>");

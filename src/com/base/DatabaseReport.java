@@ -603,6 +603,7 @@ public class DatabaseReport
   // prop.setProperty("AMT_PLACE", post.m_placePayoff);
   // prop.setProperty("AMT_SHOW", post.m_showPayoff);
   prop.setProperty("OWNER_TRAINER", post.m_ownerTrn);
+  prop.setProperty("RUN_STYLE", post.m_runStyle);
   sql = makeInsert("RACE_POST", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();

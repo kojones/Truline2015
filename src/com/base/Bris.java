@@ -393,19 +393,37 @@ public class Bris
    "MORNINGLINE",
    // 203 # of days since last race NUMERIC 9999 4
    "DAYSSINCELAST",
-   // 204-218 DRF complete race
-   "COMMENTS"
+   // 204-209 DRF race condition lines
+   "COMMENTS", "", "", "", "", "",
                           // conditions lines CHARACTER 254 Sometimes blank
                           // because data is
                           // not always
                           // available...
-                          // Use 1st file
-                          // field #16 when
-                          // necessary
-                          // 219-227 Reserved BRGT228-232 5 additional reserved
-                          // fields for possible expansion
-                          // 233 Race ID Name CHARACTER XXXXXXXXX 9234 Reserved
-                          // *** END of second file ***
+   // 210  Lifetime Starts - All Weather Surface        999      3
+   // 211  Lifetime Wins - All Weather Surface          999      3
+   // 212  Lifetime Places - All Weather Surface        999      3
+   // 213  Lifetime Shows - All Weather Surface         999      3
+   // 214  Lifetime Earnings - All Weather Surface 99999999      8
+   "LRAWESTARTS",
+   "LRAWEWINS",
+   "LRAWEPLACES",
+   "LRAWESHOWS",
+   "LRAWEEARNINGS"
+   // 215  Best BRIS Speed - All Weather Surface        999      3
+   // 216 Reserved...
+   // 217     "Low" Claiming Price         NUMERIC  9999999      7
+   //           (for today's race)
+   // 218     Statebred flag               CHARACTER      X      1
+   //           (for today's race)
+   // 219-227 Wager Types for this race    CHARACTER   X(50)    50  (if available)
+   // 228     Sire Stud Fee (current)      NUMERIC  9999999      7  (if available)
+   // 229     Best BRIS Speed - Fast track NUMERIC      999      3
+   // 230     Best BRIS Speed - Turf       NUMERIC      999      3
+   // 231     Best BRIS Speed - Off track  NUMERIC      999      3
+   // 232     Best BRIS Speed - Distance   NUMERIC      999      3
+   // 233-234 Reserved for possible future expansion
+   //
+   //                   *** END of second file  ***
                           };
  // Beginning of 3rd file of the 3 files
  public String[] names3   = {
@@ -486,8 +504,8 @@ public class Bris
    "RACECLASSIFICATION",
    // 34 Claiming Price (of horse) NUMERIC 9999999 7
    "PPCLAIMPRICE",
-   // 35 Reserved NUMERIC 99999999 8
-   "",
+   // 35 Purse                         NUMERIC    99999999  8
+   "PPPURSE",
    // 36 Start Call Position CHARACTER 2
    "POSITION1",
    // 37 1st Call Position(if any) CHARACTER 2
@@ -553,8 +571,8 @@ public class Bris
    "LENLDRMGN4",
    // 54 Finish BtnLngths only
    "LENGTHS4",
-   // 55 Reserved BRIRS
-   "",
+   // 55 BRIS Race Shape - 2nd Call NUMERIC 999 3
+   "RACESHAPE2",
    // 56 BRIS 2f Pace Fig NUMERIC 999 3
    "PACE2F",
    // 57 BRIS 4f Pace Fig NUMERIC 999 3
@@ -569,8 +587,8 @@ public class Bris
    "PACE10F",
    // 61 BRIS Late Pace Fig NUMERIC 999 3
    "PACELATE",
-   // 62 Reserved
-   "",
+   // 55 BRIS Race Shape - 1st Call NUMERIC 999 3
+   "RACESHAPE1",
    // 63 Reserved
    "",
    // 64 BRIS Speed Rating NUMERIC 999 3
@@ -701,12 +719,16 @@ public class Bris
    // 12 Best BRIS Speed:2ndMstRcntYr NUMERIC 999 3
    // 13 Best BRIS Speed:Track NUMERIC 999 3
    // 14 # Starts (FAST Dirt) NUMERIC 999 3
-   "", "", "", "", "", "", "", "", "", "",
+   "", "", "", "", "", "", "", "", "",
    // 15 # Wins (FAST Dirt) NUMERIC 99 2
    // 16 # Places (FAST Dirt) NUMERIC 99 2
    // 17 # Shows (FAST Dirt) NUMERIC 99 2
    // 18 Earnings (FAST Dirt) NUMERIC 99999999 8
-   "", "", "", "",
+   "LRDIRTSTARTS",
+   "LRDIRTWINS",
+   "LRDIRTPLACES",
+   "LRDIRTSHOWS",
+   "LRDIRTEARNINGS",
    // 19 Key Trnr Stat Category #1 CHARACTER X(16) 16
    "TRAINERCAT1",
    // 20 # of starts #1 NUMERIC 9999 4
@@ -1075,6 +1097,8 @@ public class Bris
        post.m_sex = post.m_horse.m_props.getProperty("SEX");
        post.m_trainerName = post.m_props.getProperty("TRAINER");
        post.m_jockeyName = post.m_props.getProperty("JOCKEY");
+       post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
+       post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");
        int idx1 = post.m_sireName.indexOf("(");
        if (idx1 > 0)
@@ -1280,7 +1304,7 @@ public class Bris
   boolean status = true;
   BufferedReader in = null;
   StreamTokenizer parser = null;
-  String value;
+  String value = "";
   try {
    in = openFile(file, ".dr4");
   } catch (Exception e) {
@@ -1327,7 +1351,19 @@ public class Bris
       if (fld < names4.length) {
        if (Log.isDebug(Log.PARSE3))
         Log.print(names4[fld] + "=" + parser.sval + "\n");
-       tjs.m_props.put(names4[fld], parser.sval);
+       if (names4[fld].length() > 0) {
+        if (names4[fld].substring(0,3).equals("LRD")) {
+         value = tjs.m_props.getProperty("RACENO");
+         tjs.m_raceNo = Lib.atoi(value);
+         value = tjs.m_props.getProperty("POSTPOSITION");
+         tjs.m_postPosition = Lib.atoi(value);
+         Post post = findPost(tjs.m_raceNo, tjs.m_postPosition);
+         if (post != null)
+          post.m_props.put(names4[fld], parser.sval);
+        }
+        else
+         tjs.m_props.put(names4[fld], parser.sval);
+       }
       }
       break;
      case ',':

@@ -69,10 +69,10 @@ import com.base.TextReport;
 public class Truline
 {
  public static String         title        = "Truline 2015";
- public static String         version      = "Version 1.3 10/8/14";
- public static String         copyright    = "Copyright(c) 2001,2014 Spinning Electrons, LLC";
- public static String         m_handicapVersion = "default";
- public static String         m_trulineVersion  = "1.3.0";
+ public static String         version      = "Version 1.5 3/8/2015";
+ public static String         copyright    = "Copyright(c) 2001,2015 Spinning Electrons, LLC";
+ public static String         m_handicapVersion = "hf2015v1";
+ public static String         m_trulineVersion  = "1.5.0";
  public static Properties     userProps    = new Properties();
  public static CommaDelimited co           = new CommaDelimited();                            // Correlation
  public static CommaDelimited pc           = new CommaDelimited();                            // track
@@ -91,6 +91,7 @@ public class Truline
  public static CommaDelimited dt           = new CommaDelimited();                            // dam stats
  public static CommaDelimited ds           = new CommaDelimited();                            // dam sire stats
  public static CommaDelimited hf           = new CommaDelimited();                            // handicapping factors
+ public static CommaDelimited rs           = new CommaDelimited();                            // run style profile
                                                                                                
  public static final int      TEXTMODE     = 1;
  public static final int      HTMLMODE     = 2;
@@ -156,7 +157,8 @@ public class Truline
      dt.load(dir + "Truline.dt"); // dam stats
      ds.load(dir + "Truline.ds"); // dam sire stats
      hf.load(dir + "Truline.hf"); // handicapping factor stats
-     }
+     rs.load(dir + "Truline.rs"); // run style profile
+         }
   } catch (Exception e) {
   }
   // Decode the runtime arguments.

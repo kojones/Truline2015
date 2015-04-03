@@ -67,6 +67,7 @@ public class Race
  String     m_bettable3      = "";
  String     m_ignoreRunLine  = "";
  String     m_resultsPosted  = "";
+ String     m_runStyleProfile= "";
  int        m_cnthorses      = 0;
  int        m_cntnrl         = 0;
  int        m_cnt1st         = 0;
