@@ -515,7 +515,7 @@ public class BrisJCP
    // 238 Statebred flag "s"(for today's race) NUMERIC 9999999 7
    "STATEBRED",
    // 240-248 Wager Types for this race CHARACTER X(50) 50 (if available)
-   "",
+   "WAGERTYPES",
    "",
    "",
    "",
@@ -530,7 +530,7 @@ public class BrisJCP
    // 252-255 Reserved fields for future use
    "",
    "",
-   "",
+   "PRIMEPOWER",
    "",
    "",
    "",
@@ -762,42 +762,42 @@ public class BrisJCP
    // 1149 Places 4
    // 1150 Shows 4
    // 1151 ROI Current Year NUMERIC 999.99 6
-   "",
-   "",
-   "",
-   "",
-   "",
-   "",
+   "BRISCLS",
+   "TRNSTSCY",
+   "TRNWINCY",
+   "TRNPLCCY",
+   "TRNSHWCY",
+   "TRNROICY",
    // 1152 Trainer Sts Previous Year NUMERIC 9999 4
    // 1153 Wins 4
    // 1154 Places 4
    // 1155 Shows 4
    // 1156 ROI Previous Year NUMERIC 999.99 6
-   "",
-   "",
-   "",
-   "",
-   "",
+   "TRNSTSPY",
+   "TRNWINPY",
+   "TRNPLCPY",
+   "TRNSHWPY",
+   "TRNROIPY",
    // 1157 Jockey Sts Current Year NUMERIC 9999 4
    // 1158 Wins 4
    // 1159 Places 4
    // 1160 Shows 4
    // 1161 ROI Current Year NUMERIC 999.99 6
-   "",
-   "",
-   "",
-   "",
-   "",
+   "JKYSTSCY",
+   "JKYWINCY",
+   "JKYPLCCY",
+   "JKYSHWCY",
+   "JKYROICY",
    // 1162 Jockey Sts Previous Year NUMERIC 9999 4
    // 1163 Wins 4
    // 1164 Places 4
    // 1165 Shows 4
    // 1166 ROI Previous Year NUMERIC 999.99 6
-   "",
-   "",
-   "",
-   "",
-   "",
+   "JKYSTSPY",
+   "JKYWINPY",
+   "JKYPLCPY",
+   "JKYSHWPY",
+   "JKYROIPY",
    // 1167-1176 BRIS Speed Par for class level of Last 10 races 3
    "",
    "",
@@ -1149,6 +1149,7 @@ public class BrisJCP
   boolean pastPerf = false;
   boolean trainerJockey = false;
   boolean badLine = false;
+  boolean noPP = false;
   TrainerJockeyStats tjs = new TrainerJockeyStats();
   while (running) {
    try {
@@ -1158,11 +1159,15 @@ public class BrisJCP
      case StreamTokenizer.TT_WORD:
       fld_in++;
       if (fld < namesJcp.length) {
-       name = namesJcp[fld].trim();
        if (parser.sval == null)
         nameVal = "";
        else
         nameVal = parser.sval;
+       name = namesJcp[fld].trim();
+       if (name == "FRONTBANDAGE" && j == 9 && !nameVal.equals("0") && !nameVal.equals("1")) {
+        fld++;
+        name = namesJcp[fld].trim();
+       }
        if (name.length() > 0) {
         // Check for bad line
         if (name == "TRACKABBR" && race.m_track != null) {
@@ -1234,8 +1239,10 @@ public class BrisJCP
          w_StartPP = fld;
         }
         if (name.length() > 6)
-         if (name.substring(0,7).equals("BARSHOE") || name.substring(0,7).equals("NOSEPAT")
-           || name.substring(0,6).equals("LRDIRT")) 
+         // if (name.substring(0,7).equals("BARSHOE") || name.substring(0,7).equals("NOSEPAT")
+         //  || name.substring(0,6).equals("LRDIRT") || name.substring(0,6).equals("AVGBRI") 
+         // || name.substring(0,6).equals("TRNSTS"))
+        if (name.substring(0,7).equals("BRISCLS"))
          {
           pastPerf = false;
          }
@@ -1320,6 +1327,10 @@ public class BrisJCP
         j = 0;
         fld++;
        }
+      } else if (fld < namesJcp.length && namesJcp[fld].equals("PPRACEDATE") && !(pastPerf)) {
+        pastPerf = true;
+        noPP = true;
+        w_StartPP = fld;  
       } else if (pastPerf) {
        j++;
        if (j >= 10) {
@@ -1417,7 +1428,9 @@ public class BrisJCP
        post.m_sex = post.m_horse.m_props.getProperty("SEX");
        post.m_trainerName = post.m_props.getProperty("TRAINER");
        post.m_jockeyName = post.m_props.getProperty("JOCKEY");
+       post.m_ownerName = post.m_props.getProperty("OWNER");
        post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
+       post.m_primePower = Lib.atof(post.m_props.getProperty("PRIMEPOWER")); 
        post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");
        int idx1 = post.m_sireName.indexOf("(");
@@ -1462,7 +1475,9 @@ public class BrisJCP
       }
       // move past performances into race-by-race instances for horse
       Post postP = findPost(w_raceNo, w_postPosition);
-      if (perAll.m_props.size() > 0) {
+      if (perAll.m_props.size() <= 0) {
+       fld = w_StartPP;
+      } else {
        j = 0;
        Boolean morePP = true;
        while (morePP) {

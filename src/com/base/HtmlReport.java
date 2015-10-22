@@ -623,7 +623,7 @@ public HtmlReport() {
        DO = " DO";
       break;
     }
-    // if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+    // if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
      out.println("<td>" + post.m_sireTS + post.m_sireTS2 + post.m_trainerNamePT
        + post.m_ownerTrn + "</td><td>" + post.cloth + "</td><td>"
        + post.m_horseName + "</td><td>"

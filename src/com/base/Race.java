@@ -70,6 +70,7 @@ public class Race
  String     m_runStyleProfile= "";
  int        m_cnthorses      = 0;
  int        m_cntnrl         = 0;
+ double     m_pctNRL         = 0;
  int        m_cnt1st         = 0;
  int        m_cnttrnown      = 0;
  int        m_cntbrdown      = 0;
@@ -109,7 +110,7 @@ public class Race
  int        m_maxdays;                                // period to consider for
                                                        // rep races (how many
                                                        // days to go back)
- String[]   raceFlows        = { "", "", "", "", "" };
+ String[]   raceFlows        = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
  int        cntRaceFlows     = -1;
  int        cntHorseFlows    = 0;
  int        totalPoints    = 0;

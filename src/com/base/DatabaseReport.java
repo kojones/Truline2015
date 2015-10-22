@@ -26,7 +26,7 @@ public class DatabaseReport
  boolean                   first_race = true;
  String                    sql;
  public static String[] names        = { "FS", "SS", "FT", "TT", "CS", "AS",
-  "RE", "QP", "EN", "EPS"          };
+  "RE", "QP", "EN", "EPS", "TTCS"          };
  public int[]           biasPoints   = new int[names.length]; // Bias points Dirt
  public int[]           biasPointsT   = new int[names.length]; // Bias points Turf
  public int[]           biasPointsR  = new int[names.length]; // Bias points
@@ -203,7 +203,12 @@ public class DatabaseReport
    sql = makeDelete("RACE_POST_HANDICAP", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
-   sql = makeDelete("RACE_POST_FLOW_BET", prop);
+   if (!race.m_resultsPosted.equals("Y")) {
+    sql = makeDelete("RACE_POST_FLOW_BET", prop);
+    psqlStmt = connect.prepareStatement(sql);
+    psqlStmt.executeUpdate();
+   }
+   sql = makeDelete("RACE_FLOW_BET", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
    sql = makeDelete("RACE_POST_PAST_PERF", prop);
@@ -242,9 +247,11 @@ public class DatabaseReport
    sql = makeDelete("RACE_POST_HANDICAP", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
-   sql = makeDelete("RACE_POST_FLOW_BET", prop);
-   psqlStmt = connect.prepareStatement(sql);
-   psqlStmt.executeUpdate();
+   if (!race.m_resultsPosted.equals("Y")) {
+    sql = makeDelete("RACE_POST_FLOW_BET", prop);
+    psqlStmt = connect.prepareStatement(sql);
+    psqlStmt.executeUpdate();
+   }
    sql = makeDelete("RACE_POST_PAST_PERF", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
@@ -265,6 +272,8 @@ public class DatabaseReport
   insertRace(race);
   insertRaceBias(race);
   insertRaceResults(race);
+  if (race.cntRaceFlows >= 0)
+   insertRaceFlowBet(race);
   if (m_mode == Truline.DATABASE1) {
    insertRaceProperties(race);
   }
@@ -301,12 +310,23 @@ public class DatabaseReport
      // See if horse gets any bias points
      biasBonus = 0;
      for (int i = 0; i < 10; i++) {
-      if (post.m_handicap.rank[i] == 1 && biasPoints[i] > 0) {
-       biasBonus = biasBonus + biasPoints[i];
+      if (race.m_surface.equals("D")) {
+       if (post.m_handicap.rank[i] == 1 && biasPoints[i] > 0) {
+        biasBonus = biasBonus + biasPoints[i];
+       }
+       if (Truline.userProps.getProperty("TrackTheBias", "N").equals("2")
+         && post.m_handicap.rank[i] == 2 && biasPoints[i] > 0) {
+        biasBonus = biasBonus + biasPoints[i];
+       }
       }
-      if (Truline.userProps.getProperty("TrackTheBias", "N").equals("2")
-        && post.m_handicap.rank[i] == 2 && biasPoints[i] > 0) {
-       biasBonus = biasBonus + biasPoints[i];
+      if (race.m_surface.equals("T")) {
+       if (post.m_handicap.rank[i] == 1 && biasPointsT[i] > 0) {
+        biasBonus = biasBonus + biasPointsT[i];
+       }
+       if (Truline.userProps.getProperty("TrackTheBias", "N").equals("2")
+         && post.m_handicap.rank[i] == 2 && biasPointsT[i] > 0) {
+        biasBonus = biasBonus + biasPointsT[i];
+       }
       }
      }
     }
@@ -409,6 +429,7 @@ public class DatabaseReport
   prop.setProperty("RESULTS_POSTED", race.m_resultsPosted);
   prop.setProperty("CNT_HORSES", Lib.ftoa((int) race.m_cnthorses, 0));
   prop.setProperty("CNT_HORSE_NRL", Lib.ftoa((int) race.m_cntnrl, 0));
+  prop.setProperty("PCT_HORSE_NRL", Lib.ftoa(race.m_pctNRL, 0));
   prop.setProperty("CNT_HORSE_NRLML", Lib.ftoa((int) race.m_cntnrlML, 0));
   String raceCond = race.m_props.getProperty("COMMENTS");
   if (raceCond.length() > 500)
@@ -592,10 +613,13 @@ public class DatabaseReport
   prop.setProperty("OWNER_NAME", ownerName);
   prop.setProperty("SIRE_NAME", post.m_sireName);
   prop.setProperty("SIRE_AWD", post.m_sireAWD);
+  prop.setProperty("SIRE_APRS", Lib.ftoa((int) post.m_sireAPRS, 0));
   prop.setProperty("DAM_NAME", post.m_damName);
   prop.setProperty("DAM_AWD", post.m_damAWD);
+  prop.setProperty("DAM_APRS", Lib.ftoa((int) post.m_damAPRS, 0));
   prop.setProperty("DAM_SIRE_NAME", post.m_damSireName);
   prop.setProperty("DAM_SIRE_AWD", post.m_damSireAWD);
+  prop.setProperty("DAM_SIRE_APRS", Lib.ftoa((int) post.m_damSireAPRS, 0));
   prop.setProperty("SIRE_SIRE_NAME", post.m_sireSireName);
   prop.setProperty("FINISH_POS", post.m_finishPos);
   prop.setProperty("ODDS", post.m_odds);
@@ -780,6 +804,10 @@ public class DatabaseReport
     Lib.ftoa((int) post.m_handicap.rank[Handicap.CS], 0));
   prop.setProperty("CS_VALUE",
     Lib.ftoa((double) post.m_handicap.value[Handicap.CS], 1));
+  prop.setProperty("TTCS_RANK",
+    Lib.ftoa((int) post.m_handicap.rank[Handicap.TTCS], 0));
+  prop.setProperty("TTCS_VALUE",
+    Lib.ftoa((double) post.m_handicap.value[Handicap.TTCS], 1));
   prop.setProperty("FT_RANK",
     Lib.ftoa((int) post.m_handicap.rank[Handicap.FT], 0));
   prop.setProperty("FT_VALUE",
@@ -796,14 +824,22 @@ public class DatabaseReport
     Lib.ftoa((int) post.m_handicap.rank[Handicap.QP], 0));
   prop.setProperty("QP_VALUE",
     Lib.ftoa((double) post.m_handicap.value[Handicap.QP], 0));
+  prop.setProperty("PP_RANK",
+    Lib.ftoa((int) post.m_handicap.rank[Handicap.PP], 0));
+  prop.setProperty("PP_VALUE",
+    Lib.ftoa((double) post.m_handicap.value[Handicap.PP], 0));
   prop.setProperty("POINTS", Lib.ftoa((int) post.m_handicap.points, 0));
   prop.setProperty("BONUS", Lib.ftoa((int) post.m_handicap.bonus, 0));
   prop.setProperty("BONUS_RANK", Lib.ftoa((int) post.m_handicap.bonusRank, 0));
   prop.setProperty("MBEN_FLAG", post.m_handicap.extraFlg ? "#" : " ");
   prop.setProperty("TRAINER_PT", post.m_trainerNamePT);
-  prop.setProperty("SIRE_TS", post.m_sireTS);
+  prop.setProperty("SIRE_TS", post.m_sireTSp);
   prop.setProperty("SIRE_TS2", post.m_sireTS2);
   prop.setProperty("OWNER_TRAINER", post.m_ownerTrn);
+  prop.setProperty("OWNER_BREEDER", post.m_ownerBrd);
+  prop.setProperty("TRAINER_JOCKEY", post.m_trnJky);
+  prop.setProperty("TRAINER_JOCKEY_HOT", post.m_trnJkyHot);
+  prop.setProperty("BULLET_WORK", post.m_5furlongBullet);
   prop.setProperty("BIAS_POINTS", Lib.ftoa((int) biasBonus,0));
   if (post.m_handicap.m_repRace != null)
    repRaceDate = Lib.datetoa(post.m_handicap.m_repRace.ppRaceDate);
@@ -824,8 +860,8 @@ public class DatabaseReport
   sql = makeInsert("RACE_POST_HANDICAP", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();
-//  if (post.cntHorseFlows >= 0)
-//   insertRacePostFlowBet(race, post);
+  // if (post.cntHorseFlows >= 0)
+  //  insertRacePostFlowBet(race, post);
  }
  private void insertRacePostFlowBet(Race race, Post post) throws Exception
  {
@@ -853,6 +889,42 @@ public class DatabaseReport
   sql = makeInsert("RACE_POST_FLOW_BET", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();
+ }
+ private void insertRaceFlowBet(Race race) throws Exception
+ {
+  if (Log.isDebug(Log.TRACE))
+   Log.print("Outputing RACE_FLOW_BET table for "
+     + race.m_props.getProperty("RACENO") + "\n");
+  Properties prop = new Properties();
+  prop.setProperty("TRACK_ABBR", race.m_track);
+  prop.setProperty("DATE_RACE", race.m_props.getProperty("RACEDATE"));
+  prop.setProperty("RACE_NO", race.m_props.getProperty("RACENO"));
+  prop.setProperty("FLOW_BETS", Lib.ftoa((int) race.cntRaceFlows+1, 0));
+  for (int i = 0; i <= race.cntRaceFlows; i++) {
+   prop.setProperty("BET_NUMBER", Lib.ftoa((int) i+1, 0));
+   prop.setProperty("POSSIBLE_BET", race.raceFlows[i]);
+   sql = makeInsert("RACE_FLOW_BET", prop);
+   psqlStmt = connect.prepareStatement(sql);
+   psqlStmt.executeUpdate();
+   // insert flow bet for horse if no results yet
+   if (!race.m_resultsPosted.equals("Y")) {
+    if (race.raceFlows[i].indexOf("FB") > 0) {
+     if (i == 0 && Log.isDebug(Log.TRACE))
+      Log.print("Outputing RACE_POST_FLOW_BET table for "
+        + race.m_props.getProperty("RACENO") + "\n");
+     Properties prop2 = new Properties();
+     prop2.setProperty("TRACK_ABBR", race.m_track);
+     prop2.setProperty("DATE_RACE", race.m_props.getProperty("RACEDATE"));
+     prop2.setProperty("RACE_NO", race.m_props.getProperty("RACENO"));
+     prop2.setProperty("SADDLE_CLOTH", race.raceFlows[i].substring(0,race.raceFlows[i].indexOf(" ")));
+     prop2.setProperty("BET_NUMBER", "1");
+     prop2.setProperty("FLOW_BET", race.raceFlows[i].substring(race.raceFlows[i].indexOf(" ")+1));
+     sql = makeInsert("RACE_POST_FLOW_BET", prop2);
+     psqlStmt = connect.prepareStatement(sql);
+     psqlStmt.executeUpdate();
+    }
+   }
+  }
  }
  /**
   * Build an insert SQL command.

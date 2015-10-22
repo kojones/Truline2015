@@ -1420,6 +1420,7 @@ public class BrisMCP
        post.m_sex = post.m_horse.m_props.getProperty("SEX");
        post.m_trainerName = post.m_props.getProperty("TRAINER");
        post.m_jockeyName = post.m_props.getProperty("JOCKEY");
+       post.m_ownerName = post.m_props.getProperty("OWNER");
        post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
        post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");

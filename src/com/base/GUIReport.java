@@ -269,7 +269,10 @@ public void writeReport(GUI out, Race race)
   }
   out.println();
   out.println("         Run Style Profile  " + race.m_runStyleProfile);
-  if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+  if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
+   if (race.cntRaceFlows >= 0)
+    out
+    .println("=============================================================================================");
    int cnt = 0;
    while (cnt <= race.cntRaceFlows) {
     out.println(race.raceFlows[cnt]);
@@ -377,7 +380,8 @@ public void writeReport(GUI out, Race race)
     repRaceDate = Lib.datetoa(post.m_handicap.m_repRace.ppRaceDate);
    else
     repRaceDate = "00/00";
-   out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1) + "  "
+   out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1) + " "
+     + Lib.pad(post.m_5furlongBullet, 1)
      + Lib.pad(post.m_ownerTrn, 1) + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1)
      + Lib.pad(post.m_horseNameP, 19) + Lib.pad(post.m_runStyle, 3) + Lib.pad(repRaceDate, 5)
      + Lib.rjust(post.m_handicap.value[Handicap.EPS], 6)
@@ -423,7 +427,7 @@ public void writeReport(GUI out, Race race)
      + Lib.rjust(post.m_handicap.rank[Handicap.RE], 4)
      + Lib.rjust(post.m_handicap.rank[Handicap.QP], 3)
      + Lib.rjust(post.m_handicap.bonusRank, 3) + Lib.rjust(finishPosPrt, 5));
-   out.println("" + Lib.pad(post.m_trnJkyPct, 7) + "  "
+   out.println("" + Lib.pad(post.m_trnJkyPct+post.m_trnJky, 8) + " "
      + Lib.pad(post.m_props.getProperty("JOCKEY", "").toLowerCase(), 14)
      + Lib.pad(post.m_jkyfactorsPR, 8)
      + Lib.rjust((double) jstart, 3) + "/"
@@ -467,29 +471,63 @@ public void writeReport(GUI out, Race race)
     + "  Surface " + ((race.m_surface.equals("D")) ? "Dirt" :
                       (race.m_surface.equals("A")) ? "All Weather" :"Turf")
     + "  Handicapped for "+race.m_trackCond+" track");
-  out.print("SEX: ");
-  switch (sexAge.charAt(2)) {
-   case 'N':
-    out.print(" No Sex Restrictions");
+  out.print("AGE/SEX (" + sexAge + ")");
+  switch (sexAge.charAt(0)) {
+   case 'A':
+    out.print(" 2 year olds");
     break;
-   case 'M':
-    out.print(" Mares and Fillies");
+   case 'B':
+    out.print(" 3 year olds");
     break;
    case 'C':
-    out.print(" Colts and/or Geldings");
+    out.print(" 4 year olds");
+    break;
+   case 'D':
+    out.print(" 5 year olds");
+    break;
+   case 'E':
+    out.print(" 3 & 4 year olds");
     break;
    case 'F':
-    out.print(" Fillies Only");
+    out.print(" 4 & 5 year olds");
+    break;
+   case 'G':
+    out.print(" 3, 4, and 5 year olds");
+    break;
+   case 'H':
+    out.print(" all ages");
     break;
   }
-  out.println();
+  switch (sexAge.charAt(1)) {
+   case 'O':
+    out.print(", That age Only");
+    break;
+   case 'U':
+    out.print(", That age and Up");
+    break;
+  }
+  switch (sexAge.charAt(2)) {
+   case 'N':
+    out.print(", No Sex Restrictions");
+    break;
+   case 'M':
+    out.print(", Mares and Fillies");
+    break;
+   case 'C':
+    out.print(", Colts and/or Geldings");
+    break;
+   case 'F':
+    out.print(", Fillies Only");
+    break;
+  }
+out.println();
   if (Truline.userProps.getProperty("ShowTidbits", "N").equals("Y")) {
    if (race.m_bettable1 == "N")
     out.println("*** NON-BETTABLE RACE ***");
    else if (race.m_bettable2 == "N")
    {
     out.println("*** LOW PROBABILITY RACE - " + race.m_cntnrl
-      + " horses have no running lines ***");
+      + " horses have no running lines - (" + Lib.ftoa(race.m_pctNRL, 0) + "%) ***");
     if (race.m_cnt1st > 0 && race.m_cntnrl > 0)
      out.println("*** CAUTION - " + race.m_cnt1st + " first time starter(s)");
    }
@@ -498,13 +536,13 @@ public void writeReport(GUI out, Race race)
    else if (race.m_cnthorses < 8)
    {
     out.println("*** Double overlay betting only - " + race.m_cnthorses
-      + " horses in race - " + race.m_cntnrl + " have no running line");
+      + " horses in race - " + race.m_cntnrl + " have no running line - (" + Lib.ftoa(race.m_pctNRL, 0) + "%)");
     if (race.m_cnt1st > 0 && race.m_cntnrl > 0)
      out.println("*** CAUTION - " + race.m_cnt1st + " first time starter(s)");
    }
-   else if (race.m_cntnrl > 2)
+   else if (race.m_cntnrl > 0)
    {
-    out.println("*** CAUTION - " + race.m_cntnrl + " horses have no running line");
+    out.println("*** CAUTION - " + race.m_cntnrl + " horses have no running line - (" + Lib.ftoa(race.m_pctNRL, 0) + "%)");
    if (race.m_cnt1st > 0)
     out.println("*** CAUTION - " + race.m_cnt1st + " first time starter(s)");
    }
@@ -644,10 +682,11 @@ public void writeReport(GUI out, Race race)
    if (i >= 5 && post.m_biasN == 0 && post.m_handicap.bonus + post.m_handicap.points < pts)
     continue;
    else {
-   // if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
-    out.print("           ");
+   // if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
+    out.print("          ");
     out.println(Lib.pad(post.m_sireTSp, 1) + Lib.pad(post.m_sireTS2, 1)
-      + Lib.pad(post.m_trainerNamePT.substring(1), 1) + Lib.pad(post.m_ownerTrn, 1)
+      + Lib.pad(post.m_trainerNamePT.substring(1), 1) 
+      + Lib.pad(post.m_5furlongBullet, 1) + Lib.pad(post.m_ownerTrn, 1)
       + Lib.pad(post.cloth, 3) + Lib.pad(post.m_ownerBrd, 1) + Lib.pad(post.m_horseName, 16)
       + Lib.rjust(post.m_handicap.bonus + post.m_handicap.points, 5) + " " + Lib.pad(post.m_runStyle, 3)
       + Lib.rjust(post.m_truLine, 6)

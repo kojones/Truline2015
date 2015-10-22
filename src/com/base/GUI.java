@@ -84,7 +84,7 @@ public class GUI extends Frame implements ActionListener, Runnable
   resultsMenuItem.setActionCommand("results");
   resultsMenuItem.addActionListener(this);
   fileMenu.add(resultsMenuItem);
-  if (Truline.userProps.getProperty("Experimental", "N").equals("Y")) {
+  if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
    MenuItem ignoreRunLineMenuItem = new MenuItem("Ignore Running Lines?");
    ignoreRunLineMenuItem.setActionCommand("ignoreRunLine");
    ignoreRunLineMenuItem.addActionListener(this);
@@ -192,6 +192,13 @@ public class GUI extends Frame implements ActionListener, Runnable
     if (Truline.userProps.getProperty("DATATYPE", "DRF").equals("MCP")) {
      m_brisMCP = new BrisMCP();
      if (m_brisMCP.load(file, m_filename)) {
+      if (Truline.userProps.getProperty("PostResults", "N").equals("Y")) {
+       BrisXRD brisXRD = new BrisXRD();
+       if (brisXRD.load(file, m_filename, m_brisMCP.m_races))
+        System.out.println("Results loaded.\n");
+       else
+        System.out.println("No results file found.\n");
+      }
       for (Enumeration el = m_brisMCP.m_races.elements(); el.hasMoreElements();) {
        Race race = (Race) el.nextElement();
        Handicap.compute(race);
@@ -200,6 +207,13 @@ public class GUI extends Frame implements ActionListener, Runnable
     } else if (Truline.userProps.getProperty("DATATYPE", "DRF").equals("JCP")) {
       m_brisJCP = new BrisJCP();
       if (m_brisJCP.load(file, m_filename)) {
+       if (Truline.userProps.getProperty("PostResults", "N").equals("Y")) {
+        BrisXRD brisXRD = new BrisXRD();
+        if (brisXRD.load(file, m_filename, m_brisJCP.m_races))
+         System.out.println("Results loaded.\n");
+        else
+         System.out.println("No results file found.\n");
+       }
        for (Enumeration el = m_brisJCP.m_races.elements(); el.hasMoreElements();) {
         Race race = (Race) el.nextElement();
         Handicap.compute(race);
@@ -208,6 +222,13 @@ public class GUI extends Frame implements ActionListener, Runnable
      } else {
      m_bris = new Bris();
      if (m_bris.load(file, m_filename)) {
+      if (Truline.userProps.getProperty("PostResults", "N").equals("Y")) {
+       BrisXRD brisXRD = new BrisXRD();
+       if (brisXRD.load(file, m_filename, m_bris.m_races))
+        System.out.println("Results loaded.\n");
+       else
+        System.out.println("No results file found.\n");
+      }
       for (Enumeration el = m_bris.m_races.elements(); el.hasMoreElements();) {
        Race race = (Race) el.nextElement();
        Handicap.compute(race);

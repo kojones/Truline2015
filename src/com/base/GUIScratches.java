@@ -28,7 +28,7 @@ class GUIScratches extends Dialog implements ActionListener
  private TextField scrtitle, horse1, horse2, horse3, horse4, horse5, horse6,
  horse7, horse8, horse9, horse10;
 private TextField horse11, horse12, horse13, horse14, horse15, horse16,
- horse17, horse18, horse19, horse20;
+ horse17, horse18, horse19, horse20, horse21, horse22, horse23, horse24;
 private GUI       m_gui;
 private int       m_horse;
 private Race      m_race;
@@ -317,6 +317,30 @@ for (Enumeration e = race.m_posts.elements(); e.hasMoreElements();) {
      new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
      horse20);
    continue;
+  case 21:
+   horse21 = new TextField(post.m_props.getProperty("ENTRY", ""), 2);
+   setRow(c, gridbag,
+     new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
+     horse21);
+   continue;
+  case 22:
+   horse22 = new TextField(post.m_props.getProperty("ENTRY", ""), 2);
+   setRow(c, gridbag,
+     new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
+     horse22);
+   continue;
+  case 23:
+   horse23 = new TextField(post.m_props.getProperty("ENTRY", ""), 2);
+   setRow(c, gridbag,
+     new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
+     horse23);
+   continue;
+  case 24:
+   horse24 = new TextField(post.m_props.getProperty("ENTRY", ""), 2);
+   setRow(c, gridbag,
+     new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
+     horse24);
+   continue;
  }
  setRow(c, gridbag,
    new Label(Lib.pad(post.cloth, 3) + Lib.pad(post.m_horseName, 16)),
@@ -410,6 +434,18 @@ if (cmd.equals("ok")) {
     continue;
    case 20:
     post.m_props.setProperty("ENTRY", horse20.getText().toUpperCase());
+    continue;
+   case 21:
+    post.m_props.setProperty("ENTRY", horse21.getText().toUpperCase());
+    continue;
+   case 22:
+    post.m_props.setProperty("ENTRY", horse22.getText().toUpperCase());
+    continue;
+   case 23:
+    post.m_props.setProperty("ENTRY", horse23.getText().toUpperCase());
+    continue;
+   case 24:
+    post.m_props.setProperty("ENTRY", horse24.getText().toUpperCase());
     continue;
   }
  }

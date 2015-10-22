@@ -660,9 +660,25 @@ public class Bris
    "FAVORITE",
    // 93 Front Bandages indicator NUMERIC 9 1 0-No Front Wraps
    // 1-Front Wraps
-   "FRONTBANDAGE"
-                          // 94-122 29 Blank fields (for possible future
-                          // additions)
+   "FRONTBANDAGE",
+   // 94 BRIS Speed Par of this prior start      3
+   "BRISPAR",
+   // 95 Bar shoe                      CHARACTER X          1 r- bar shoe
+   "BARSHOE",
+   // 96 Company Line Codes            CHARACTER XXXX       4
+   // 97 "Low" Claiming Price of race  NUMERIC   9999999    7
+   // 98 "High" Claiming Price of race NUMERIC   9999999    7 
+   // 99 Reserved                      CHARACTER XX         2
+   // 100 Code for prior start                    X          1 "s"-Nasal Strip
+   //                                                         "x"-Off the turf
+   // 101-106 Reserved
+   // 107 Extended Start Comment        CHARACTER X(90)     90
+   // 108 "Sealed" track indicator      CHARACTER X          1 "s" 
+   "","","","","","","","","","","","","",
+   // 109 Prev. All-Weather Surface flagCHARACTER X          1 A- All Weather
+   //                                                           Surface
+   "ALLWEATHER"
+   // 110-122 Reserved fields (for possible future additions)
                           //
                           // k- This field is a "key field" used to link the
                           // appropriate records of
@@ -1097,6 +1113,7 @@ public class Bris
        post.m_sex = post.m_horse.m_props.getProperty("SEX");
        post.m_trainerName = post.m_props.getProperty("TRAINER");
        post.m_jockeyName = post.m_props.getProperty("JOCKEY");
+       post.m_ownerName = post.m_props.getProperty("OWNER");
        post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
        post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");

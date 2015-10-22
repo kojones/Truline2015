@@ -69,10 +69,10 @@ import com.base.TextReport;
 public class Truline
 {
  public static String         title        = "Truline 2015";
- public static String         version      = "Version 1.5 3/8/2015";
+ public static String         version      = "Version 1.8 8/21/2015";
  public static String         copyright    = "Copyright(c) 2001,2015 Spinning Electrons, LLC";
  public static String         m_handicapVersion = "hf2015v1";
- public static String         m_trulineVersion  = "1.5.0";
+ public static String         m_trulineVersion  = "1.8.0";
  public static Properties     userProps    = new Properties();
  public static CommaDelimited co           = new CommaDelimited();                            // Correlation
  public static CommaDelimited pc           = new CommaDelimited();                            // track
@@ -81,17 +81,23 @@ public class Truline
  public static CommaDelimited ts           = new CommaDelimited();                            // turf sires
  public static CommaDelimited bf           = new CommaDelimited();                            // track strengths
  public static CommaDelimited jf           = new CommaDelimited();                            // jockey strengths
+ public static CommaDelimited jm           = new CommaDelimited();                            // jockey meet stats
  public static CommaDelimited tf           = new CommaDelimited();                            // trainer strengths
+ public static CommaDelimited tm           = new CommaDelimited();                            // trainer meet stats
  public static CommaDelimited rf           = new CommaDelimited();                            // exotic bets
  public static CommaDelimited fn           = new CommaDelimited();                            // input file names
  public static CommaDelimited tt           = new CommaDelimited();                            // truline trainer stats
  public static CommaDelimited jt           = new CommaDelimited();                            // truline jockey stats
  public static CommaDelimited tj           = new CommaDelimited();                            // trainer jockey stats
+ public static CommaDelimited t2           = new CommaDelimited();                            // trainer jockey track stats
+ public static CommaDelimited t3           = new CommaDelimited();                            // trainer surface stats
+ public static CommaDelimited to           = new CommaDelimited();                            // trainer owner stats
  public static CommaDelimited st           = new CommaDelimited();                            // sire stats
  public static CommaDelimited dt           = new CommaDelimited();                            // dam stats
  public static CommaDelimited ds           = new CommaDelimited();                            // dam sire stats
  public static CommaDelimited hf           = new CommaDelimited();                            // handicapping factors
  public static CommaDelimited rs           = new CommaDelimited();                            // run style profile
+ public static CommaDelimited sc           = new CommaDelimited();                            // scratches
                                                                                                
  public static final int      TEXTMODE     = 1;
  public static final int      HTMLMODE     = 2;
@@ -159,6 +165,15 @@ public class Truline
      hf.load(dir + "Truline.hf"); // handicapping factor stats
      rs.load(dir + "Truline.rs"); // run style profile
          }
+   if (Truline.userProps.getProperty("Experimental","No").equals("Yes"))
+   {
+    t2.load(dir + "Truline.t2"); // trainer jockey track stats
+    to.load(dir + "Truline.to"); // trainer owner stats
+    sc.load(dir + "Truline.sc"); // daily scratch file from HDW
+    t3.load(dir + "Truline.t3"); // trainer surface 1-year stats
+    tm.load(dir + "Truline.tm"); // trainer meet stats
+    jm.load(dir + "Truline.jm"); // jockey meet stats
+      }
   } catch (Exception e) {
   }
   // Decode the runtime arguments.
