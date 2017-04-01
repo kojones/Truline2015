@@ -271,6 +271,11 @@ public class Handicap
    race.m_surface = race.m_allweather;
   race.cntHorseFlows = -1;
   race.cntRaceFlows = -1;
+  race.cntRaceFlowsAK = -1;
+  for (int i = 0; i < 21; i++) {
+   race.raceFlows[i] = "";
+   race.raceFlowsAK[i] = "";
+  }
   if (race.m_surface.equals("X"))
    race.m_surface = "T";
   // 2-year old races are not bettable
@@ -376,7 +381,15 @@ public class Handicap
    identifyRunStyle(race);
    identifyTrnFlowBets(race);
    identifyJkyFlowBets(race);
+   identifyTrnJkyFlowBets(race);
    identifyRaceFlowBets(race);
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y"))
+    identifyBonusFactors(race);
+   
+   // Sort top of handicap into sequence by saddle cloth
+   Arrays.sort(race.raceFlows);
+   Arrays.sort(race.raceFlowsAK);
+
   }
  }
  /**
@@ -398,8 +411,8 @@ public class Handicap
   determineRepRace(race, post, canidates);
   if (m_repRace != null) {
    int repRaceDays = getDifferenceDays(m_repRace.ppRaceDate,race.m_raceDate);
-   if (repRaceDays == formDaysLast)
-    post.m_lastRacePurseComp = "";
+   // if (repRaceDays == formDaysLast)
+   // post.m_lastRacePurseComp = "";
    post.m_repRaceDtl = "RR="+m_repRace.ppTrack+"/"+m_repRace.m_props.getProperty("RACECLASSIFICATION","")+"/"
      +m_repRace.m_props.getProperty("PPPURSE")+"/"
      +m_repRace.m_props.getProperty("POSITION6", "")
@@ -408,9 +421,9 @@ public class Handicap
    int pPurse = Lib.atoi(m_repRace.m_props.getProperty("PPPURSE",Lib.ftoa((double) race.m_purse,0)));
    double pursePct = race.m_purse * 100 / pPurse;
    if (pursePct > 119)
-    post.m_repRacePurseComp = "\\b CLASS UP - Todays purse is "+Lib.ftoa((double) pursePct-100,0)+"%"+" more than the Rep Race \\b0";
+    post.m_repRacePurseComp = "CLASS UP - Purse is "+Lib.ftoa((double) pursePct-100,0)+"%"+" more than Rep Race ";
    if (pursePct < 81)
-    post.m_repRacePurseComp = "\\b CLASS DOWN - Todays purse is "+Lib.ftoa((double) 100-pursePct,0)+"%"+" less than the Rep Race \\b0";
+    post.m_repRacePurseComp = "CLASS DOWN - Purse is "+Lib.ftoa((double) 100-pursePct,0)+"%"+" less than Rep Race ";
    value[FS] = m_repRace.fs;
    value[SS] = m_repRace.ss;
    value[FT] = m_repRace.ft;
@@ -479,6 +492,18 @@ public class Handicap
   post.m_formCycle3 = "       ";
   post.m_formCycle4 = "       ";
   post.m_formCycle5 = "       ";
+  post.m_freshHorse = false;
+
+  int days1 = 0;
+  int finish1 = 0;
+  double speed1 = 0;
+  int days2 = 0;
+  int finish2 = 0;
+  double speed2 = 0;
+  int days3 = 0;
+  int finish3 = 0;
+  int days4 = 0;
+
   for (Enumeration e = post.m_performances.elements(); e.hasMoreElements();) {
    Performance p = (Performance) e.nextElement();
    cntPP++;
@@ -528,7 +553,7 @@ public class Handicap
    p.drfSpeed = Lib.atof(p.m_props.getProperty("DRFSPEED"));
    double formSpeed = p.variant+p.drfSpeed;
    String pracetype = p.m_props.getProperty("PPRACETYPE", "");
-   int finishPos = Lib.atoi(p.m_props.getProperty("POSITION6", ""));
+   int finishPos = Lib.atoi(p.m_props.getProperty("POSITION6", "99"));
 
    // Find track class for PP
    double pTrackClass = 0;
@@ -541,6 +566,9 @@ public class Handicap
    
    int purse = race.m_purse;
    int pPurse = Lib.atoi(p.m_props.getProperty("PPPURSE"));
+   String pJockey = p.m_props.getProperty("PPJOCKEY");
+   if (pJockey == null)
+    pJockey = "None";
    int pPurse2 = Lib.atoi(p.m_props.getProperty("PPPURSE",Lib.ftoa((double) race.m_purse,0)));
    double pursePct = race.m_purse * 100 / pPurse2;
    double pursePctChg = pursePct - 100;
@@ -548,14 +576,20 @@ public class Handicap
    String purseChgS = "PP " + Lib.ftoa(pPurse2, 0) + " to today " + Lib.ftoa(purse, 0);
    
    if (cntForm == -1) {
+    if (!pJockey.equals(post.m_jockeyName))
+     post.m_jockeyChgToday = true;
     post.m_lastRacePurseComp = "";
     post.m_lastRaceClassChg = pursePct-100;
     if (pursePct > 119) {
-     post.m_lastRacePurseComp = "\\b CLASS UP - Todays purse is "+Lib.ftoa((double) pursePct-100,0)+"%"+" more than the Last Race \\b0";
+     post.m_lastRacePurseComp = "CLASS UP - Purse is "+Lib.ftoa((double) pursePct-100,0)+"%"+" more than Last Race ";
     }
     if (pursePct < 81) {
-     post.m_lastRacePurseComp = "\\b CLASS DOWN - Todays purse is "+Lib.ftoa((double) 100-pursePct,0)+"%"+" less than the Last Race \\b0"; 
+      post.m_lastRacePurseComp = "CLASS DOWN - Purse is "+Lib.ftoa((double) 100-pursePct,0)+"%"+" less than Last Race "; 
     }
+    if (pTrackClass > race.m_trackClass)
+     post.m_lastRaceTrackClass = "CLASS UP - Track class is "+Lib.ftoa((double) race.m_trackClass,0)+".  Last Race was "+Lib.ftoa((double) pTrackClass,0)+ " ";
+    else if (pTrackClass < race.m_trackClass)
+     post.m_lastRaceTrackClass = "CLASS DOWN - Track class is "+Lib.ftoa((double) race.m_trackClass,0)+".  Last Race was "+Lib.ftoa((double) pTrackClass,0)+ " ";
    }
    
    int claim = Lib.atoi(p.m_props.getProperty("PPCLAIMPRICE"));
@@ -587,11 +621,31 @@ public class Handicap
     
    int formDays = getDifferenceDays(p.ppRaceDate,race.m_raceDate);
    if (cntForm == -1) {
+    days1 = formDays;
+    finish1 = finishPos;
+    speed1 = formSpeed;
     formDaysLast = formDays;
     post.m_daysSinceLast = formDays;
     post.m_finishPosLast = finishPos;
    }
+   else if (cntForm == 0) {
+    days2 = formDays;
+    finish2 = finishPos;
+    speed2 = formSpeed;
+   }
+   else if (cntForm == 1) {
+    days3 = formDays;
+    finish3 = finishPos;
+   }
+   else if (cntForm == 2)
+    days4 = formDays;
 
+   // If jockey change - see if today's jockey won previously with horse
+   if (post.m_jockeyChgToday) {
+    if (pJockey.equals(post.m_jockeyName) && finishPos == 1)
+     post.m_jockeyTodayPrevWin = true;
+   }
+   
    // Make sure there is running line info
    double pos0 = Lib.atof(p.m_props.getProperty("POSITION1", "")); // Position
                                                                    // at
@@ -779,7 +833,8 @@ public class Handicap
                                                                                  // maiden
      && (!stakesRace || pHighStakesRace) // stakes match
      && (pTrackClass <= race.m_trackClass || Truline.userProps.getProperty("ArtAndKim", "N").equals("N"))
-     && (pursePctChg < Lib.atoi(Truline.userProps.getProperty("MaxPurseIncrease", "20")) || Truline.userProps.getProperty("ArtAndKim", "N").equals("N"))
+     && ((pursePctChg < Lib.atoi(Truline.userProps.getProperty("MaxPurseIncrease", "20")) || pracetype.equals("N") || pracetype.equals("G1") || pracetype.equals("G2") || pracetype.equals("G3")) 
+       || Truline.userProps.getProperty("ArtAndKim", "N").equals("N"))
      && (pos2 != 0 && f2 != 0)) {
     candidates.addElement(p);
     if (Log.isDebug(Log.TRACE))
@@ -789,6 +844,18 @@ public class Handicap
      Log.print("            Candidate not used\n\n");
    }
   }
+/**
+  if (((days2 < 45 && days3 > 0 && days3 > days2+33 && days3 < days2+181 && finish1 != 1 && finish2 != 1) ||
+       (days2 < 45 && days4 > 0 && days4 > days3+33 && days4 < days3+181 && finish1 != 1 && finish2 != 1 && finish3 != 1)) &&
+       (speed1 > speed2)) {
+   post.m_freshHorse = true;
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y") && race.cntRaceFlows < 20) {
+    race.cntRaceFlows++;
+    race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" *** Fresh Horse Plus BF ***";
+   }
+  }
+ **/
+   
   return candidates;
  }
  /**
@@ -1835,8 +1902,14 @@ public class Handicap
   
   if (len >= 2)
    post.m_work3Short = "Y";
+  else
+   post.m_work3Short = "N";
+   
   if (len >= 3)
    post.m_work4Week = "Y";
+  else
+   post.m_work4Week = "N";
+   
   int work3Last = 0;
   int work4Last = 0;
   
@@ -1864,7 +1937,7 @@ public class Handicap
    else {
     if (i == 0)
      work4Last = daysB;
-    else if (i < 4 && daysB != work4Last+6 && daysB != work4Last+7 && daysB != work4Last+8)
+    else if (i < 4 && daysB > work4Last+8)
      post.m_work4Week = "N";
     else
      work4Last = daysB; 
@@ -2704,7 +2777,7 @@ public class Handicap
    // Log.print("     Post# "+post.m_postPosition+", Horse: "+post.m_horseName+"\n");
    int topRanks = 0;
    // Compute total of all Top Ranks for the horse
-   for (int i = 0; i < names.length; i++) {
+   for (int i = 0; i < names.length-3; i++) {
     if (post.m_handicap.rank[i] <= 0)
      continue;
     if (post.m_handicap.rank[i] == 1)
@@ -2843,35 +2916,6 @@ public class Handicap
    // Accumulate total points for race to enable computing odds
    race.totalPoints += post.m_handicap.bonus + post.m_handicap.points;
    
-   // Always compute and display the current T-J win percent if > 0
-   post.m_kimsT2 = "";
-   int tstart, twin, jstart, jwin;
-   tstart = Lib.atoi(post.m_props.getProperty("TRAINERSTARTS"));
-   twin = Lib.atoi(post.m_props.getProperty("TRAINERWINS"));
-   jstart = Lib.atoi(post.m_props.getProperty("JOCKEYSTARTS"));
-   jwin = Lib.atoi(post.m_props.getProperty("JOCKEYWINS"));
-   int jpcnt = (jstart > 0) ? (jwin) * 100 / jstart : 0;
-   int tpcnt = (tstart > 0) ? (twin) * 100 / tstart : 0;
-   if (tstart >= 10)
-    post.m_trnPct = tpcnt;
-   if (jstart >= 10)
-    post.m_jkyPct = jpcnt;
-   else
-    post.m_jkyPct = 10;    
-   int tjcurrpct = jpcnt+tpcnt;
-   if (tjcurrpct > 0){
-    race.cntHorseFlows++;
-    post.cntHorseFlows++;
-    if (tjcurrpct > 49) {
-     post.horseFlows[post.cntHorseFlows] = "\\b TrnJkyCurrMeet="+tpcnt+"+"+jpcnt+"="+tjcurrpct+" \\b0";
-     post.m_kimsT2 = "\\b T2 \\b0";
-    }
-    else {
-     post.horseFlows[post.cntHorseFlows] = "TrnJkyCurrMeet="+tpcnt+"+"+jpcnt+"="+tjcurrpct;
-     post.m_kimsT2 = "T2";
-    }
-   }
-   
    // Add in other factors
    post.m_otherFactors = "";
    if (post.m_handicap.extraFlg || (post.m_handicap.value[FS] == 0 && post.m_handicap.rank[EPS] < 3) 
@@ -2893,7 +2937,7 @@ public class Handicap
    post.m_kimsTT = "";
    post.m_kimsCS = "";
    post.m_kimsTTCS = "";
-   if (post.m_handicap.rank[EPS] < 4)
+   // if (post.m_handicap.rank[EPS] < 4)
     post.m_kimsEPS = "EPS"+post.m_handicap.rank[EPS];
    if (post.m_handicap.rank[TT] < 4)
     post.m_kimsTT = "TT"+post.m_handicap.rank[TT];
@@ -3052,6 +3096,8 @@ public class Handicap
   String factor = "";
   String pct = "";
   String roi = "";
+  String itmpct = "";
+  String itmroi = "";
   String flowBet1 = "";
   String flowBet = "";
   double nrl = race.m_cntnrl;
@@ -3139,6 +3185,8 @@ public class Handicap
     factor = prop2.getProperty("FACTOR");
     pct = prop2.getProperty("PCT");
     roi = prop2.getProperty("ROI");
+    itmpct = prop2.getProperty("ITMPCT");
+    itmroi = prop2.getProperty("ITMROI");
     String items = corr;
     int mark = 0;
     int count = 0;
@@ -3151,7 +3199,8 @@ public class Handicap
      if (idx2 == -1)
       idx2 = items.length();
      int val = Lib.atoi(items.substring(idx1 + 1, idx2));
-     double valD = val / 100;
+     double valD = val;
+     valD = valD / 100;
      count++;
      Log.print("         Corrolation #" + count + "  " + name + "=" + val
        + "\n");
@@ -3215,8 +3264,18 @@ public class Handicap
        Log.print("          HIT: WRK4=" + val + "\n");
        mark++;
       }
+     } else if (name.equals("BLT4")) {
+      if (post.m_4furlongBullet.equals("@")) {
+       Log.print("          HIT: BLT4=" + val + "\n");
+       mark++;
+      }
+     } else if (name.equals("BLT5")) {
+      if (post.m_5furlongBullet.equals("@")) {
+       Log.print("          HIT: BLT5=" + val + "\n");
+       mark++;
+      }
      } else if (name.equals("NRL")) {
-      if (race.m_pctNRL < val) {
+      if (race.m_pctNRL <= val) {
        Log.print("          HIT: NRL<" + val + "\n");
        mark++;
       }
@@ -3236,13 +3295,13 @@ public class Handicap
        mark++;
       }
      } else if (name.equals("MLL")) {
-      if (post.m_morningLineD >= val) {
-       Log.print("          HIT: MLL>=" + val + "\n");
+      if (post.m_morningLineD >= valD) {
+       Log.print("          HIT: MLL>=" + valD + "\n");
        mark++;
       }
      } else if (name.equals("MLH")) {
-      if (post.m_morningLineD < val) {
-       Log.print("          HIT: MLH<" + val + "\n");
+      if (post.m_morningLineD <= valD) {
+       Log.print("          HIT: MLH<" + valD + "\n");
        mark++;
       }
      } else if (name.equals("ONESD")) {
@@ -3272,7 +3331,10 @@ public class Handicap
      // Satisfied all of the elements of the betting factor
      if (post.cntHorseFlows < 19) {
       post.cntHorseFlows++;
-      post.horseFlows[post.cntHorseFlows] = "\\b B="+race.m_trackCond+"-"+factor+"/"+pct+"%/$"+roi+" \\b0";
+      if (itmpct.equals("0"))
+       post.horseFlows[post.cntHorseFlows] = "\\b B="+race.m_trackCond+"-"+factor+"/"+pct+"%/$"+roi+" \\b0";
+      else
+       post.horseFlows[post.cntHorseFlows] = "\\b B="+race.m_trackCond+"-"+factor+"/"+pct+"%/$"+roi+"/"+itmpct+"%/$"+itmroi+" \\b0";
      }
      if (flowBet1.equals("N")) {
       post.m_betfactors++;
@@ -3284,7 +3346,17 @@ public class Handicap
       post.m_betfactors++;
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  "+factor+" / "+pct+"% / $"+roi;
+       if (itmpct.equals("0"))
+        race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+factor+" / "+pct+"% / $"+roi;
+       else
+        race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+factor+" / "+pct+"% / $"+roi+" / "+itmpct+"% / $"+itmroi;
+      }
+      if (race.cntRaceFlowsAK < 20 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+       race.cntRaceFlowsAK++;
+       if (itmpct.equals("0"))
+        race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+factor+" / "+pct+"% / $"+roi;
+       else
+        race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+factor+" / "+pct+"% / $"+roi+" / "+itmpct+"% / $"+itmroi;
       }
      }
      if (Log.isDebug(Log.TRACE))
@@ -3453,6 +3525,8 @@ public class Handicap
   String tfactor = "";
   String pct = "";
   String roi = "";
+  String ITMpct = "";
+  String ITMroi = "";
   String flowBet1 = "";
   String flowBet = "";
   int cnt = 0;
@@ -3521,34 +3595,48 @@ public class Handicap
    Log.print("     Post# " + post.m_postPosition + ", Horse: "
      + post.m_horseName + "\n");
    post.m_trnfactors = 0;
+   post.m_trnPctF = 0;
    // Look at each trainer factor
    int cnt_trainer_factors = 0;
    for (Enumeration c = trnFactors.elements(); c.hasMoreElements();) {
     Properties prop = (Properties) c.nextElement();
     flowBet1 = prop.getProperty("FLOWBET");
     trnOwn = prop.getProperty("TO");
+    distance = prop.getProperty("DISTANCE");
+    surface = prop.getProperty("SURFACE");
     trainer = prop.getProperty("TRAINER");
     tfactor = prop.getProperty("TFACTOR");
     pct = prop.getProperty("PCT");
     roi = prop.getProperty("ROI");
+    ITMpct = prop.getProperty("ITM");
+    ITMroi = prop.getProperty("ITMROI");
     if (trainer.equals(post.m_trainerName)
-      && (trnOwn == null | post.m_ownerTrn.equals("*"))) {
+      && (trnOwn == null || post.m_ownerTrn.equals("*"))) {
+     if (distance != null && surface != null){
+      post.m_trnPctF = Lib.atoi(pct);
+     }
      if (flowBet1.equals("Y") && post.cntHorseFlows < 19) {
       post.cntHorseFlows++;
-      post.horseFlows[post.cntHorseFlows] = "\\b T="+tfactor+"/"+pct+"%/$"+roi+" \\b0";
+      if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) 
+       post.horseFlows[post.cntHorseFlows] = "\\b T Factor="+tfactor+"/"+pct+"%/$"+roi+"/"+ITMpct+"%/$"+ITMroi+" \\b0";
+      else
+       post.horseFlows[post.cntHorseFlows] = "\\b T="+tfactor+"/"+pct+"%/$"+roi+" \\b0";
      }
-     if (flowBet1.equals("N")) {
-      post.m_trnfactors++;
-     } else if (flowBet1.equals("Y")) {
+     if (flowBet1.equals("Y")) {
       flowBet = "*";
       post.m_trnfactors++;
      } else if (flowBet1.equals("F")) {
       flowBet = "$";
       post.m_trnfactors++;
-      if (race.cntRaceFlows < 20) {
-       race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  1-year Trainer Strength "+trainer+" "+tfactor+"/"+pct+"%/$"+roi;
-      }
+      if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y"))
+       if (post.cntHorseFlows < 19) {
+        post.cntHorseFlows++;
+        post.horseFlows[post.cntHorseFlows] = "\\b T Factor="+tfactor+"/"+pct+"%/$"+roi+"/"+ITMpct+"%/$"+ITMroi+" \\b0";
+       }
+       else if (race.cntRaceFlows < 20) {
+        race.cntRaceFlows++;
+        race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Trainer Strength "+trainer+" "+tfactor+"/"+pct+"%/$"+roi;
+       }
      }
     }
     /*
@@ -3584,7 +3672,7 @@ public class Handicap
    if (post.m_trnfactors > 0) {
     post.m_trnfactorsPR = "/t" + Lib.ftoa((int) post.m_trnfactors, 0) + flowBet;
     post.m_kimsT1 = "t" + Lib.ftoa((int) post.m_trnfactors, 0) + flowBet;
-    race.cntHorseFlows++;
+    // race.cntHorseFlows++;
 //   if (post.cntHorseFlows < 19 && post.m_trnfactors >= Lib.atoi(Truline.userProps.getProperty("T-NumberIndicators", "99"))) {
 //    post.cntHorseFlows++;
 //    post.horseFlows[post.cntHorseFlows] = "T-NumberIndicators="+post.m_trnfactors+flowBet;
@@ -3612,6 +3700,8 @@ public class Handicap
   String jfactor = "";
   String pct = "";
   String roi = "";
+  String ITMpct = "";
+  String ITMroi = "";
   String flowBet1 = "";
   String flowBet = "";
   int cnt = 0;
@@ -3679,6 +3769,7 @@ public class Handicap
    Log.print("     Post# " + post.m_postPosition + ", Horse: "
      + post.m_horseName + "\n");
    post.m_jkyfactors = 0;
+   post.m_jkyPctF = 0;
    post.m_jkyfactorsPR = "";
    // Look at each jockey factor
    int cnt_jockey_factors = 0;
@@ -3687,25 +3778,35 @@ public class Handicap
     flowBet1 = prop.getProperty("FLOWBET");
     jockey = prop.getProperty("JOCKEY");
     jfactor = prop.getProperty("JFACTOR");
+    distance = prop.getProperty("DISTANCE");
+    surface = prop.getProperty("SURFACE");
     pct = prop.getProperty("PCT");
     roi = prop.getProperty("ROI");
+    ITMpct = prop.getProperty("ITM");
+    ITMroi = prop.getProperty("ITMROI");
     if (jockey.equals(post.m_jockeyName)) {
+     if (distance != null && surface != null){
+      post.m_jkyPctF = Lib.atoi(pct);
+     }
      if (flowBet1.equals("Y") && post.cntHorseFlows < 19) {
       post.cntHorseFlows++;
-      post.horseFlows[post.cntHorseFlows] = "\\b J="+jfactor+"/"+pct+"%/$"+roi+" \\b0";
+      if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) 
+       post.horseFlows[post.cntHorseFlows] = "\\b J Factor="+jfactor+"/"+pct+"%/$"+roi+"/"+ITMpct+"%/$"+ITMroi+" \\b0";
+      else
+       post.horseFlows[post.cntHorseFlows] = "\\b J="+jfactor+"/"+pct+"%/$"+roi+" \\b0";
      }
-     if (flowBet1.equals("N")) {
-      post.m_jkyfactors++;
-     } else if (flowBet1.equals("Y")) {
+     if (flowBet1.equals("Y")) {
       flowBet = "*";
       post.m_jkyfactors++;
      } else if (flowBet1.equals("F")) {
       flowBet = "$";
       post.m_jkyfactors++;
+/*
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  1-year Jockey Strength "+jockey+" "+jfactor+"/"+pct+"%/$"+roi;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Jockey Strength "+jockey+" "+jfactor+"/"+pct+"%/$"+roi;
       }
+ */
       }
      }
     }
@@ -3742,7 +3843,7 @@ public class Handicap
     if (post.m_jkyfactors > 0) {
      post.m_jkyfactorsPR = "/j" + Lib.ftoa((int) post.m_jkyfactors, 0) + flowBet;
      post.m_kimsJ1 = "j" + Lib.ftoa((int) post.m_jkyfactors, 0) + flowBet;
-     race.cntHorseFlows++;
+     // race.cntHorseFlows++;
 //   if (post.cntHorseFlows < 19 && post.m_jkyfactors >= Lib.atoi(Truline.userProps.getProperty("J-NumberIndicators", "99"))) {
 //    post.cntHorseFlows++;
 //    post.horseFlows[post.cntHorseFlows] = "J-NumberIndicators="+post.m_jkyfactors+flowBet;
@@ -3752,12 +3853,297 @@ public class Handicap
   return;
  }
  /**
+  * Identify any horses that match previous profitable betting correlations for trainers
+  */
+ private static void identifyTrnJkyFlowBets(Race race)
+ {
+  if (Log.isDebug(Log.TRACE))
+   Log.print("\n  Identify Trainer Jockey Flow Bets in race #" + race.m_raceNo + "\n");
+  String post_trnJkyfactors = "";
+  Vector trnJkyFactors = new Vector();
+  String race_surface = race.m_surface;
+  String trainer = "";
+  String jockey = "";
+  String distance = "";
+  String surface = "";
+  String raceType = "";
+  String age = "";
+  String sex = "";
+  String trnOwn = "";
+  String tjfactor = "";
+  String pct = "";
+  String roi = "";
+  String ITMpct = "";
+  String ITMroi = "";
+  String flowBet1 = "";
+  String flowBet = "";
+  int cnt = 0;
+  for (Enumeration c = Truline.t4.elements(); c.hasMoreElements();) {
+   Properties prop = (Properties) c.nextElement();
+   String track = prop.getProperty("TRACK");
+   trainer = prop.getProperty("TRAINER");
+   jockey = prop.getProperty("JOCKEY");
+   distance = prop.getProperty("DISTANCE");
+   surface = prop.getProperty("SURFACE");
+   raceType = prop.getProperty("RACETYPE");
+   age = prop.getProperty("AGE");
+   sex = prop.getProperty("SEX");
+   trnOwn = prop.getProperty("TO");
+   String sexAge = race.m_props.getProperty("AGESEX", "   ");
+   if (track != null)
+    if (track.substring(2).equals("X"))
+     track = track.substring(0, 2);
+   if (track == null || track.equals("All") || (track != null && track.equals(race.m_track))) {
+    if (distance == null
+      || ((distance.equals("RT") && race.m_distance > 1759) || (distance
+        .equals("SP") && race.m_distance < 1760))) {
+     if (surface == null || surface.equals(race_surface)) {
+      if ((raceType == null || raceType.equals(race.m_raceType))
+        || (raceType.equals("G") && race.m_purse >= 100000)
+        || (raceType.equals("A") && race.m_purse < 100000 && (!race.m_raceType
+          .equals("M") && !race.m_raceType.equals("S") && !race.m_raceType
+           .equals("C")))) {
+       if (age == null || (age.equals("2") && sexAge.charAt(0) == 'A')) {
+        if (sex == null
+          || (sex.equals("F") && (sexAge.charAt(2) == 'F' || sexAge.charAt(2) == 'M'))
+          || (sex.equals("M") && sexAge.charAt(2) != 'F' && sexAge.charAt(2) != 'M')) {
+         trnJkyFactors.addElement(prop);
+         cnt++;
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+  /*
+   * No trainer factors across all tracks if (cnt == 0) { Log.print(
+   * "   Loading standard Correlations - no track-specific Correlations for track "
+   * +race.m_track+"\n"); for(Enumeration c = Truline.tf.elements();
+   * c.hasMoreElements();) { Properties prop = (Properties)c.nextElement();
+   * String track = prop.getProperty("TRACK"); distance =
+   * prop.getProperty("DISTANCE"); surface = prop.getProperty("SURFACE"); if
+   * (track != null && track.equals("XXX")) { if (distance == null ||
+   * ((distance.equals("RT") && race.m_distance > 1759) ||
+   * (distance.equals("SP") && race.m_distance < 1760))) { if (surface == null
+   * || surface.equals(race_surface)) { if (raceType == null ||
+   * raceType.equals(race.m_raceType)) { trnFactors.addElement(prop); cnt++; } }
+   * } } } }
+   */
+  if (Log.isDebug(Log.TRACE))
+   Log.print("   loaded " + cnt + " trainer jockey factors for track " + race.m_track
+     + "\n");
+  if (cnt == 0)
+   return;
+  // Check each horse in the race.
+  for (Enumeration e = race.m_posts.elements(); e.hasMoreElements();) {
+   Post post = (Post) e.nextElement();
+   String scratch = post.m_props.getProperty("ENTRY", "");
+   if (post.m_horseName == null || scratch.equals("S"))
+    continue; // position is empty or scratched
+   Log.print("     Post# " + post.m_postPosition + ", Horse: "
+     + post.m_horseName + "\n");
+   post.m_trnfactors = 0;
+   post.m_trnJkyPctF = 0;
+   // Look at each trainer factor
+   int cnt_trainer_jockey_factors = 0;
+   for (Enumeration c = trnJkyFactors.elements(); c.hasMoreElements();) {
+    Properties prop = (Properties) c.nextElement();
+    flowBet1 = prop.getProperty("FLOWBET");
+    trnOwn = prop.getProperty("TO");
+    distance = prop.getProperty("DISTANCE");
+    surface = prop.getProperty("SURFACE");
+    trainer = prop.getProperty("TRAINER");
+    jockey = prop.getProperty("JOCKEY");
+    tjfactor = prop.getProperty("TJFACTOR");
+    pct = prop.getProperty("PCT");
+    roi = prop.getProperty("ROI");
+    ITMpct = prop.
+      getProperty("ITM");
+    ITMroi = prop.getProperty("ITMROI");
+    if (trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
+     if (distance != null && surface != null){
+      post.m_trnJkyPctF = Lib.atoi(pct);
+     }
+     if (flowBet1.equals("Y") && post.cntHorseFlows < 19) {
+      post.cntHorseFlows++;
+      if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) 
+       post.horseFlows[post.cntHorseFlows] = "\\b T-J="+tjfactor+"/"+pct+"%/$"+roi+"/"+ITMpct+"%/$"+ITMroi+" \\b0";
+      else
+       post.horseFlows[post.cntHorseFlows] = "\\b T-J="+tjfactor+"/"+pct+"%/$"+roi+" \\b0";
+     }
+     if (flowBet1.equals("N")) {
+      post.m_trnJkyFactors++;
+     } else if (flowBet1.equals("Y")) {
+      flowBet = "*";
+      post.m_trnJkyFactors++;
+     } else if (flowBet1.equals("F")) {
+      flowBet = "$";
+      post.m_trnJkyFactors++;
+      post.m_last25 = true;
+      if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y"))
+       if (post.cntHorseFlows < 19) {
+        post.cntHorseFlows++;
+        post.horseFlows[post.cntHorseFlows] = "\\b T-J Factor="+tjfactor+"/"+pct+"%/$"+roi+"/"+ITMpct+"%/$"+ITMroi+" \\b0";
+       }
+       else if (race.cntRaceFlows < 20) {
+        race.cntRaceFlows++;
+        race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Trainer Jockey Strength "+trainer+" "+tjfactor+"/"+pct+"%/$"+roi;
+      }
+     }
+    }
+    /*
+     * No conditions - only check number of times trainer name appears String
+     * corr = prop.getProperty("CONDITION"); String items = corr; int mark = 0;
+     * int count = 0; while (true) { int idx1 = items.indexOf("="); if (idx1 <
+     * 0) break; String name = items.substring(0,idx1); int idx2 =
+     * items.indexOf(" ", idx1); if (idx2 == -1) idx2 = items.length(); int val
+     * = Lib.atoi(items.substring(idx1+1, idx2)); count++;
+     * Log.print("         Corrolation #"+count+"  "+name+"="+val+"\n"); if
+     * (name.equals("ANY")) { if (topRanks >= val) {
+     * //Log.print("          HIT: ANY="+val+"\n"); mark++; break; } } else if
+     * (name.equals("TO")) { if (post.m_ownerTrn.equals("*")) {
+     * //Log.print("          HIT: TO="+val+"\n"); mark++; break; } } else if
+     * (name.equals("SD")) { if (post.m_sireTS.equals("$") &&
+     * post.m_sireTS2.equals("d")) { //Log.print("          HIT: SD="+val+"\n");
+     * mark++; break; } } else if (name.equals("ONESD")) { if (race.m_cnt$d == 1
+     * && post.m_sireTS.equals("$") && post.m_sireTS2.equals("d")) {
+     * //Log.print("          HIT: ONESD="+val+"\n"); mark++; break; } } else {
+     * for (int i=0; i < names.length; i++) { int rankW =
+     * post.m_handicap.rank[i]; if (rankW <= 0) continue; if
+     * (name.equals(names[i]) && (rankW == val || (val > 1 && rankW <= val))) {
+     * Log
+     * .print("          HIT: "+name+"="+val+" value="+post.m_handicap.rank[i]
+     * +"\n"); mark++; break; } } } if (idx2 >= items.length()) break; items =
+     * items.substring(idx2+1); } if (count > 0 && mark == count) { // Satisfied
+     * all of the elements of the trainer factor post.m_trnfactors++; if
+     * (Log.isDebug(Log.TRACE))
+     * Log.print("     Post# "+post.m_postPosition+", Horse: "+post.m_horseName
+     * +" met "+corr+"\n"); }
+     */
+   }
+   if (post.m_trnJkyFactors > 0) {
+    post.m_trnJkyfactorsPR = "/t" + Lib.ftoa((int) post.m_trnJkyFactors, 0) + flowBet;
+    // post.m_kimsT1 = "t" + Lib.ftoa((int) post.m_trnJkyFactors, 0) + flowBet;
+    // race.cntHorseFlows++;
+//   if (post.cntHorseFlows < 19 && post.m_trnfactors >= Lib.atoi(Truline.userProps.getProperty("T-NumberIndicators", "99"))) {
+//    post.cntHorseFlows++;
+//    post.horseFlows[post.cntHorseFlows] = "T-NumberIndicators="+post.m_trnfactors+flowBet;
+//   }
+   }
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y"))
+    setTrainerJockeyLast25(race, post);
+  }
+  return;
+ }
+ 
+ /**
+  * Lookup trainer-jockey performance over last 25 races (or 90 days)
+  */
+ private static void setTrainerJockeyLast25(Race race, Post post)
+ {
+  if (Log.isDebug(Log.TRACE))
+   Log.print("\n  Set Track-specific Trainer and Jockey Performance Over Last 25 Races" + race.m_raceNo + "\n");
+  
+  String ITMpct = "";
+  String ITMroi = "";
+
+  // Find Trainer Jockey Stats for Last 25 races
+  for (Enumeration c = Truline.t5.elements(); c.hasMoreElements();) {
+   Properties prop = (Properties) c.nextElement();
+   String track = prop.getProperty("TRACK");
+   String trainer = prop.getProperty("TRAINER");
+   String jockey = prop.getProperty("JOCKEY");
+   double races5 = Lib.atof(prop.getProperty("RACESL5"));
+   double pct5 = Lib.atof(prop.getProperty("PCTL5"));
+   double roi5 = Lib.atof(prop.getProperty("ROIL5"));
+   double races10 = Lib.atof(prop.getProperty("RACESL10"));
+   double pct10 = Lib.atof(prop.getProperty("PCTL10"));
+   double roi10 = Lib.atof(prop.getProperty("ROIL10"));
+   double wins5 = races5 * pct5 / 100;
+   double wins10 = races10 * pct10 / 100;
+   if (track.equals(race.m_track) && trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
+    if (roi5 > 2.24 && pct5 > 23 && wins5 > 1) {
+     if (race.cntRaceFlows < 20) {
+      race.cntRaceFlows++;
+      race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer-Jockey Last 5 "+trainer+"+"+jockey;
+     }
+/*
+     if (race.cntRaceFlowsAK < 20 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      race.cntRaceFlowsAK++;
+      race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer-Jockey Last 5 "+trainer+"+"+jockey;
+     }
+*/
+    }
+    if (roi10 > 2.24 && pct10 > 23 && wins10 > 2 && races10 > races5) {
+     if (race.cntRaceFlows < 20) {
+      race.cntRaceFlows++;
+      race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer-Jockey Last 10 "+trainer+"+"+jockey;
+     }
+/*
+     if (race.cntRaceFlowsAK < 20 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      race.cntRaceFlowsAK++;
+      race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer-Jockey Last 10 "+trainer+"+"+jockey;
+     }
+*/
+    }
+    if (roi5 > 2.24 && pct5 > 23 && wins5 > 1) 
+     post.m_trnJkyTrkL25Stat5 = "\\b "+prop.getProperty("RACESL5")+"/"+prop.getProperty("PCTL5")+"%/$"+prop.getProperty("ROIL5")+"/"+prop.getProperty("ITML5")+"%/$"+prop.getProperty("ITMROIL5")+" \\b0";      
+    else 
+     if (post.m_last25)
+      post.m_trnJkyTrkL25Stat5 = prop.getProperty("RACESL5")+"/"+prop.getProperty("PCTL5")+"%/$"+prop.getProperty("ROIL5")+"/"+prop.getProperty("ITML5")+"%/$"+prop.getProperty("ITMROIL5");
+    if (races10 > races5 && (post.m_last25 || (roi5 > 2.24 && pct5 > 23 && wins5 > 1))) {
+     if (roi10 > 2.24 && pct10 > 23) 
+      post.m_trnJkyTrkL25Stat10 = "\\b "+prop.getProperty("RACESL10")+"/"+prop.getProperty("PCTL10")+"%/$"+prop.getProperty("ROIL10")+"/"+prop.getProperty("ITML10")+"%/$"+prop.getProperty("ITMROIL10")+" \\b0";      
+     else 
+      post.m_trnJkyTrkL25Stat10 = prop.getProperty("RACESL10")+"/"+prop.getProperty("PCTL10")+"%/$"+prop.getProperty("ROIL10")+"/"+prop.getProperty("ITML10")+"%/$"+prop.getProperty("ITMROIL10");     
+    }
+   }
+  }
+
+ }
+ /**
   * Set the track-specific trainer-jockey percentages and test for flow bet level
   */
  private static String setTrainerJockeyPercents(Race race, Post post)
  {
   if (Log.isDebug(Log.TRACE))
    Log.print("\n  Set Track-specific Trainer and Jockey Percentages" + race.m_raceNo + "\n");
+
+  // Always compute and display the current T-J win percent if > 0
+  post.m_kimsT2 = "";
+  int tstart, twin, jstart, jwin;
+  tstart = Lib.atoi(post.m_props.getProperty("TRAINERSTARTS"));
+  twin = Lib.atoi(post.m_props.getProperty("TRAINERWINS"));
+  jstart = Lib.atoi(post.m_props.getProperty("JOCKEYSTARTS"));
+  jwin = Lib.atoi(post.m_props.getProperty("JOCKEYWINS"));
+  int jpcnt = (jstart > 0) ? (jwin) * 100 / jstart : 0;
+  int tpcnt = (tstart > 0) ? (twin) * 100 / tstart : 0;
+  if (tstart >= 10)
+   post.m_trnPct = tpcnt;
+  else
+   post.m_trnPct = 10;
+  if (jstart >= 10)
+   post.m_jkyPct = jpcnt;
+  else
+   post.m_jkyPct = 10;    
+  int tjcurrpct = jpcnt+tpcnt;
+  if (tjcurrpct > 0){
+   race.cntHorseFlows++;
+   post.cntHorseFlows++;
+   if (tjcurrpct > 49) {
+    post.horseFlows[post.cntHorseFlows] = "\\b TrnJkyCurrMeet="+tpcnt+"+"+jpcnt+"="+tjcurrpct+" \\b0";
+    post.m_kimsT2 = "\\b T2 \\b0";
+   }
+   else {
+    post.horseFlows[post.cntHorseFlows] = "TrnJkyCurrMeet="+tpcnt+"+"+jpcnt+"="+tjcurrpct;
+    post.m_kimsT2 = "T2";
+   }
+  }
+  
+
+  
+  // set TJ percent for standard handicap
   String post_trnJkyPct = "TJ0";
   post.m_kimsT4 = "";
   String surfaceDist = "";
@@ -3799,6 +4185,16 @@ public class Handicap
       trnJkyTotal += Lib.atoi(prop.getProperty("TR", "0"));
       trnPct = Lib.atoi(prop.getProperty("TR", "0"));
       break;
+     case "AS":
+      post_trnJkyPct = "TJ"+prop.getProperty("AS");
+      trnJkyTotal += Lib.atoi(prop.getProperty("AS", "0"));
+      trnPct = Lib.atoi(prop.getProperty("AS", "0"));
+      break;
+     case "AR":
+      post_trnJkyPct = "TJ"+prop.getProperty("AR");
+      trnJkyTotal += Lib.atoi(prop.getProperty("AR", "0"));
+      trnPct = Lib.atoi(prop.getProperty("AR", "0"));
+      break;
     }
    break;
    }
@@ -3834,6 +4230,16 @@ public class Handicap
       trnJkyTotal += Lib.atoi(prop.getProperty("TR", "0"));
       jkyPct = Lib.atoi(prop.getProperty("TR", "0"));
       break;
+     case "AS":
+      post_trnJkyPct = post_trnJkyPct+"/"+prop.getProperty("AS");
+      trnJkyTotal += Lib.atoi(prop.getProperty("AS", "0"));
+      jkyPct = Lib.atoi(prop.getProperty("AS", "0"));
+      break;
+     case "AR":
+      post_trnJkyPct = post_trnJkyPct+"/"+prop.getProperty("AR");
+      trnJkyTotal += Lib.atoi(prop.getProperty("AR", "0"));
+      jkyPct = Lib.atoi(prop.getProperty("AR", "0"));
+      break;
     }
    foundJky = true;
    break;
@@ -3864,33 +4270,39 @@ public class Handicap
    Log.print("\n  Set Trainer and Jockey Pairs" + race.m_raceNo + "\n");
   post.m_trnJkyStat = "";
   post.m_trnJkyTrkStat = "";
-  // Find Trainer Jockey Stat 
-  for (Enumeration c = Truline.tj.elements(); c.hasMoreElements();) {
-   Properties prop = (Properties) c.nextElement();
-   String track = prop.getProperty("TRACK");
-   String trainer = prop.getProperty("TRAINER");
-   String jockey = prop.getProperty("JOCKEY");
-   String flowBet = prop.getProperty("FLOWBET");
-   if (track.equals(race.m_track) && trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
-    if (flowBet.equals("Y")) {
-     post.m_trnJkyHot = "$";
-     if (race.cntRaceFlows < 20) {
-      race.cntRaceFlows++;
-      race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  60-day Trainer-Jockey "+trainer+"+"+jockey;
+  post.m_trnJkyTrkL25Stat5 = "";
+  post.m_trnJkyTrkL25Stat10 = "";
+  post.m_last25 = false;
+
+  // Find Trainer Jockey Stat - eliminate for insiders
+  if (Truline.userProps.getProperty("Experimental", "No").equals("No")) {
+   for (Enumeration c = Truline.tj.elements(); c.hasMoreElements();) {
+    Properties prop = (Properties) c.nextElement();
+    String track = prop.getProperty("TRACK");
+    String trainer = prop.getProperty("TRAINER");
+    String jockey = prop.getProperty("JOCKEY");
+    String flowBet = prop.getProperty("FLOWBET");
+    if (track.equals(race.m_track) && trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
+     if (flowBet.equals("Y")) {
+      post.m_trnJkyHot = "$";
+      if (race.cntRaceFlows < 20) {
+       race.cntRaceFlows++;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 60-day Trainer-Jockey "+trainer+"+"+jockey;
+      }
      }
+     else
+      post.m_trnJkyHot = "*";
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (flowBet.equals("Y"))
+       post.m_trnJkyStat = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITM")+"%/$"+prop.getProperty("ITMROI")+" \\b0";      
+      else 
+       post.m_trnJkyStat = prop.getProperty("RACES")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITM")+"%/$"+prop.getProperty("ITMROI");     
+      }
+     else if (flowBet.equals("Y"))
+       post.m_trnJkyStat = "\\b "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
+      else
+       post.m_trnJkyStat = " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
     }
-    else
-     post.m_trnJkyHot = "*";
-    if (post.m_trnJkyStat.equals("")) 
-     if (flowBet.equals("Y"))
-      post.m_trnJkyStat = "\\b "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
-     else
-      post.m_trnJkyStat = " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
-    else
-     if (flowBet.equals("Y"))
-      post.m_trnJkyStat = post.m_trnJkyStat + "\\b  "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
-     else
-      post.m_trnJkyStat = post.m_trnJkyStat + " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
    }
   }
 
@@ -3898,6 +4310,8 @@ public class Handicap
   if (Truline.userProps.getProperty("Experimental", "No").equals("Yes")) {
    String tjVersion = Truline.userProps.getProperty("TJVersion",
      "201505");
+   int trnWinPct = Lib.atoi(Truline.userProps.getProperty("TrnWinPct", "12"));
+   int jkyWinPct = Lib.atoi(Truline.userProps.getProperty("JkyWinPct", "12"));
    for (Enumeration c = Truline.t2.elements(); c.hasMoreElements();) {
     Properties prop = (Properties) c.nextElement();
     String version = prop.getProperty("VERSION");
@@ -3912,22 +4326,31 @@ public class Handicap
       post.m_trnJky = "$";
      else
       post.m_trnJky = "*";
-     if (flowBet.equals("Y")) {
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (flowBet.equals("Y") && post.m_trnPct >= trnWinPct && post.m_jkyPct >= jkyWinPct) {
+       if (race.cntRaceFlowsAK < 20 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+        // if (post.m_morningLineD >= 3.5 && post.m_morningLineD <= 8) {
+         race.cntRaceFlowsAK++;
+         race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Trainer-Jockey "+trainer+"+"+jockey;
+        // }
+       }
+      }
+      if (roi > 1.99) 
+       post.m_trnJkyTrkStat = "\\b "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITM")+"%/$"+prop.getProperty("ITMROI")+" \\b0";
+      else
+       post.m_trnJkyTrkStat = " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITM")+"%/$"+prop.getProperty("ITMROI");
+     }
+     else if (flowBet.equals("Y")) {
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  1-year Trainer-Jockey "+trainer+"+"+jockey;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Trainer-Jockey "+trainer+"+"+jockey;
+       post.m_last25 = true;
       }
      }
-     if (post.m_trnJkyTrkStat.equals("")) 
-      if (roi > 1.99) 
-       post.m_trnJkyTrkStat = "\\b "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
-      else
-       post.m_trnJkyTrkStat = " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
+     if (roi > 1.99) 
+      post.m_trnJkyTrkStat = "\\b "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
      else
-      if (roi > 1.99) 
-       post.m_trnJkyTrkStat = post.m_trnJkyTrkStat + "\\b  "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI")+" \\b0";
-      else
-       post.m_trnJkyTrkStat = post.m_trnJkyTrkStat + " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
+      post.m_trnJkyTrkStat = " "+prop.getProperty("ODDS")+"/"+prop.getProperty("PCT")+"%/$"+prop.getProperty("ROI");
     }
    }
   }
@@ -3942,18 +4365,20 @@ public class Handicap
   if (Log.isDebug(Log.TRACE))
    Log.print("\n  Set Trainer and Owner Pairs" + race.m_raceNo + "\n");
   post.m_trnOwnStat = "";
-  // Find Trainer Owner Stat 
+  // Find Trainer Owner Stat - now is track-specific
+  
   for (Enumeration c = Truline.to.elements(); c.hasMoreElements();) {
    Properties prop = (Properties) c.nextElement();
+   String track = prop.getProperty("TRACK");
    String trainer = prop.getProperty("TRAINER");
    String owner = prop.getProperty("OWNER");
    String flowBet = prop.getProperty("FLOWBET");
    double roi = Lib.atof(prop.getProperty("ROI"));
-   if (trainer.equals(post.m_trainerName) && owner.equals(post.m_ownerName)) {
+   if (track.equals(race.m_track) && trainer.equals(post.m_trainerName) && owner.equals(post.m_ownerName)) {
     if (flowBet.equals("Y")){
      if (race.cntRaceFlows < 20) {
       race.cntRaceFlows++;
-      race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  2-year Trainer-Owner "+trainer+"+"+owner;
+      race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 2-year Trainer-Owner "+trainer+"+"+owner;
      }
     }
     if (post.m_trnOwnStat.equals(""))
@@ -3988,7 +4413,7 @@ public class Handicap
   if (Log.isDebug(Log.TRACE))
    Log.print("\n  Set Trainer Surface Stats" + race.m_raceNo + "\n");
   post.m_trnSurfaceStat = "";
-  post.m_trnPct = 0;
+  // post.m_trnPct = 0;
   // Find Trainer Surface Stat 
   for (Enumeration c = Truline.t3.elements(); c.hasMoreElements();) {
    Properties prop = (Properties) c.nextElement();
@@ -3996,13 +4421,18 @@ public class Handicap
    String surface = prop.getProperty("SURFACE");
    double roi = Lib.atof(prop.getProperty("ROI"));
    if (trainer.equals(post.m_trainerName) && surface.equals(race.m_surface)) {
-    post.m_trnPct = Lib.atoi(prop.getProperty("WINPCT"));
-    if (roi > 1.99) {
-      post.m_trnSurfaceStat = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
-      }
-      else {
-      post.m_trnSurfaceStat = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");      
+    int trnPct = Lib.atoi(prop.getProperty("WINPCT"));
+    if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y") && trnPct >= 25 && roi > 1.99) {
+     post.m_trnSurfaceStat = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" *** BF *** \\b0";
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y") && race.cntRaceFlows < 20) {
+      race.cntRaceFlows++;
+      race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer Surface Stats="+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" *** BF ***";;
      }
+    }
+    else if (roi > 1.99) 
+     post.m_trnSurfaceStat = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
+     else 
+      post.m_trnSurfaceStat = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");      
      return;
    }
   }
@@ -4028,17 +4458,25 @@ public class Handicap
    String flowBet = prop.getProperty("FLOWBET");
    int winPct = Lib.atoi(prop.getProperty("WINPCT"));
    double roi = Lib.atof(prop.getProperty("ROI"));
+   int ITMPct = Lib.atoi(prop.getProperty("ITMPCT","0"));
+   double ITMroi = Lib.atof(prop.getProperty("ITMROI","0"));
    if (track.equals(race.m_track) && trainer.equals(post.m_trainerName)) {
     if ((factor.equals("RT") && race.m_distance > 1759) || 
       (factor.equals("SP") && race.m_distance < 1760)) {
-     if (roi > 1.99) 
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (roi > 1.99) 
+       post.m_trnMeetStatD = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" \\b0";      
+      else 
+       post.m_trnMeetStatD = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI");     
+     }
+     else if (roi > 1.99) 
        post.m_trnMeetStatD = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
       else 
        post.m_trnMeetStatD = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");      
      if (flowBet.equals("Y")) {
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  Trainer "+trainer+" 60-day Meet Distance ";
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer "+trainer+" 60-day Meet Distance "+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");
       }
      }
     }
@@ -4047,14 +4485,20 @@ public class Handicap
      post.m_trnROIM = roi;
      // if (winPct > post.m_trnPct)
      //  post.m_trnPct = winPct;
-     if (roi > 1.99) 
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (roi > 1.99) 
+       post.m_trnMeetStatS = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" \\b0";      
+      else 
+       post.m_trnMeetStatS = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI");     
+     }
+     else if (roi > 1.99) 
        post.m_trnMeetStatS = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
       else 
        post.m_trnMeetStatS = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");      
      if (flowBet.equals("Y")) {
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  Trainer "+trainer+" 60-day Meet Surface ";
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Trainer "+trainer+" 60-day Meet Surface "+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");
       }
      }
     }
@@ -4079,11 +4523,20 @@ public class Handicap
    String jockey = prop.getProperty("JOCKEY");
    String factor = prop.getProperty("FACTOR");
    String flowBet = prop.getProperty("FLOWBET");
+   int winPct = Lib.atoi(prop.getProperty("WINPCT"));
    double roi = Lib.atof(prop.getProperty("ROI"));
+   int ITMPct = Lib.atoi(prop.getProperty("ITMPCT","0"));
+   double ITMroi = Lib.atof(prop.getProperty("ITMROI","0"));
    if (track.equals(race.m_track) && jockey.equals(post.m_jockeyName)) {
     if ((factor.equals("RT") && race.m_distance > 1759) || 
       (factor.equals("SP") && race.m_distance < 1760)) {
-     if (roi > 1.99) {
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (roi > 1.99) 
+       post.m_jkyMeetStatD = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" \\b0";      
+      else 
+       post.m_jkyMeetStatD = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI");     
+      }
+     else if (roi > 1.99) {
       post.m_jkyMeetStatD = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
       }
       else {
@@ -4092,12 +4545,18 @@ public class Handicap
      if (flowBet.equals("F")) {
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  Jockey "+jockey+" 60-day Meet Distance ";
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Jockey "+jockey+" 60-day Meet Distance "+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI");
       }
      }
     }
     if (factor.equals(race.m_surface)) { 
-     if (roi > 1.99) {
+     if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+      if (roi > 1.99) 
+       post.m_jkyMeetStatS = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI")+" \\b0";      
+      else 
+       post.m_jkyMeetStatS = prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+"/"+prop.getProperty("ITMPCT")+"%/$"+prop.getProperty("ITMROI");     
+     }
+     else if (roi > 1.99) {
       post.m_jkyMeetStatS = "\\b "+prop.getProperty("RACES")+"/"+prop.getProperty("WINPCT")+"%/$"+prop.getProperty("ROI")+" \\b0";      
       }
       else {
@@ -4106,7 +4565,7 @@ public class Handicap
      if (flowBet.equals("F")) {
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  Jockey "+jockey+" 60-day Meet Surface ";
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Jockey "+jockey+" 60-day Meet Surface ";
       }
      }
     }
@@ -4124,6 +4583,7 @@ public class Handicap
   if (Log.isDebug(Log.TRACE))
    Log.print("\n  Identify Equibase Trainer Stats" + race.m_raceNo + "/" + post.cloth + "\n");
   post.m_trainerClsChgDownOK = false;
+  post.m_trainerClm1bk = false;
   String cat = "";
   int sts = 0;
   int win = 0;
@@ -4138,14 +4598,63 @@ public class Handicap
     win = Lib.atoi(tjs.m_props.getProperty("TRAINERWIN"+k, "0"));
     itm = Lib.atoi(tjs.m_props.getProperty("TRAINERITM"+k, "0"));
     roi = Lib.atof(tjs.m_props.getProperty("TRAINERROI"+k, "0"));
-    if (!cat.equals("N/A") && (cat.indexOf("Track") <= 0) && (roi > 0)
-      && (win >= 20) && (roi >= 2.10)) {
-     if (cat.indexOf("Dwn 20Pct") >= 0)
+    if (cat.indexOf("Claimed 1bk") >= 0)
+     post.m_trainerClm1bk = true;
+    if ((!cat.equals("N/A") && (cat.indexOf("Track") <= 0)) 
+      && ((roi > 1.99) && (win >= 25)) || (win >= 30)) {
+
+     if (cat.indexOf("Claimed 1bk") >= 0)
+      if (race.cntRaceFlows < 20) {
+       race.cntRaceFlows++;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Claimed 1 back " 
+         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
+         + Lib.pad(Lib.ftoa((int) itm,0)+'%', 6)
+         + Lib.pad("$"+Lib.ftoa((double) roi, 2), 7)+" *** BF ***";
+      }
+
+     if (cat.indexOf("Dwn 20Pct") >= 0) {
+      post.m_trainerClsChgDownROI = roi;
       post.m_trainerClsChgDownOK = true;
+      if (race.cntRaceFlows < 20) {
+       race.cntRaceFlows++;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Class Down " 
+        // race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,22)+" Class Down " 
+         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
+         + Lib.pad(Lib.ftoa((int) itm,0)+'%', 6)
+         + Lib.pad("$"+Lib.ftoa((double) roi, 2), 7)+" *** BF ***";
+      }
+     }
+      
+     if (cat.indexOf("1stStart45") >= 0) {
+      post.m_trainer45LayoffROI = roi;
+      post.m_trainer45LayoffOK = true;
+     }
+     
+     if (cat.indexOf("3rdStart45") >= 0) {
+      if (race.cntRaceFlows < 20) {
+       race.cntRaceFlows++;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 3rd Start > 45 days " 
+         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
+         + Lib.pad(Lib.ftoa((int) itm,0)+'%', 6)
+         + Lib.pad("$"+Lib.ftoa((double) roi, 2), 7)+" *** BF ***";
+      }
+     }
+      
+     if (cat.indexOf("Track") >= 0 && (((roi > 1.99) && (win >= 15)) || (win >= 30))) {
+      if (race.cntRaceFlows < 20) {
+       race.cntRaceFlows++;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+cat+" " 
+         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
+         + Lib.pad(Lib.ftoa((int) itm,0)+'%', 6)
+         + Lib.pad("$"+Lib.ftoa((double) roi, 2), 7);
+      }
+     }
+     
+      
      /*
      if (race.cntRaceFlows < 20) {
       race.cntRaceFlows++;
-      race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,21)+"  Equibase Trainer Stat "
+      race.raceFlows[race.cntRaceFlows] = Lib.pad(post.cloth+" "+post.m_horseName,22)+" Equibase Trainer Stat "
         + Lib.pad(cat, 18)
         + Lib.pad(tjs.m_props.getProperty("TRAINERSTS"+k, " "), 6)
         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
@@ -4208,6 +4717,42 @@ public class Handicap
    }
   }
   return;
+ }
+  /**
+  * Identify if the race qualifies as a race flow bet
+  */
+ private static void identifyBonusFactors(Race race)
+ {
+  if (Log.isDebug(Log.TRACE))
+   Log.print("\n  Identify Bonus Factors in race #" + race.m_raceNo + "\n");
+  for (Enumeration e = race.m_posts.elements(); e.hasMoreElements();) {
+   Post post = (Post) e.nextElement();
+   String scratch = post.m_props.getProperty("ENTRY", "");
+   if (post.m_horseName == null || scratch.equals("S"))
+    continue; // position is empty or scratched
+
+   if (!post.m_lastRacePurseComp.equals("")) 
+    if (post.m_lastRacePurseComp.indexOf("CLASS DOWN") >= 0 && post.m_trainerClsChgDownOK && post.m_trainerClsChgDownROI > 1.99)
+     if (race.cntRaceFlows < 20) {
+      race.cntRaceFlows++;
+      race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" "+post.m_lastRacePurseComp + "- Trainer ROI is "+Lib.ftoa(post.m_trainerClsChgDownROI, 2)+" *** BF ***";
+     }
+
+   if (post.m_trnJkyPctF > post.m_trnPctF+5 && post.m_trnJkyPctF > post.m_jkyPctF+5
+     && post.m_trnPctF > 20 && post.m_jkyPctF > 15)
+    if (race.cntRaceFlows < 20) {
+     race.cntRaceFlows++;
+     race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Top Trainer-Top Jockey Team - T-J="+post.m_trnJkyPctF+"% / T="+post.m_trnPctF+"% / J="+post.m_jkyPctF+"%   *** BF ***";
+    }
+
+   if (post.m_jockeyTodayPrevWin)
+    if (race.cntRaceFlows < 20) {
+     race.cntRaceFlows++;
+     race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Jockey Change - Today's Jockey won previously on horse   *** BF ***";
+    }
+
+  }
+   return;
  }
   /**
    * See if horse has been scratched

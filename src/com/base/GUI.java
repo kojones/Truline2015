@@ -44,7 +44,7 @@ public class GUI extends Frame implements ActionListener, Runnable
  private static final int FORWARD      = 1;
  private static final int BACKWORD     = 2;
  public GUI() {
-  super(Truline.title);
+   super(Truline.title);
  }
  public void init()
  {
@@ -479,7 +479,11 @@ public class GUI extends Frame implements ActionListener, Runnable
  }
  public void run()
  {
-  String file = getFile();
+  String file = null;
+  if (m_filename == null)
+   file = getFile();
+  else
+   file = m_filename;
   m_filename = Truline.fixupFile(file);
   if (Truline.userProps.getProperty("DATATYPE", "DRF").equals("MCP")) {
    m_brisMCP = new BrisMCP();

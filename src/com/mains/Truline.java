@@ -69,10 +69,10 @@ import com.base.TextReport;
 public class Truline
 {
  public static String         title        = "Truline 2015";
- public static String         version      = "Version 1.8 8/21/2015";
- public static String         copyright    = "Copyright(c) 2001,2015 Spinning Electrons, LLC";
+ public static String         version      = "Version 2.1 4/2/2016";
+ public static String         copyright    = "Copyright(c) 2001,2016 Spinning Electrons, LLC";
  public static String         m_handicapVersion = "hf2015v1";
- public static String         m_trulineVersion  = "1.8.0";
+ public static String         m_trulineVersion  = "2.1.0";
  public static Properties     userProps    = new Properties();
  public static CommaDelimited co           = new CommaDelimited();                            // Correlation
  public static CommaDelimited pc           = new CommaDelimited();                            // track
@@ -91,6 +91,8 @@ public class Truline
  public static CommaDelimited tj           = new CommaDelimited();                            // trainer jockey stats
  public static CommaDelimited t2           = new CommaDelimited();                            // trainer jockey track stats
  public static CommaDelimited t3           = new CommaDelimited();                            // trainer surface stats
+ public static CommaDelimited t4           = new CommaDelimited();                            // trainer jockey strengths
+ public static CommaDelimited t5           = new CommaDelimited();                            // trainer jockey last 25
  public static CommaDelimited to           = new CommaDelimited();                            // trainer owner stats
  public static CommaDelimited st           = new CommaDelimited();                            // sire stats
  public static CommaDelimited dt           = new CommaDelimited();                            // dam stats
@@ -153,8 +155,8 @@ public class Truline
    if (Truline.userProps.getProperty("TL2014","N").equals("Yes"))
      {
      bf.load(dir + "Truline.bf"); // betting factors / flows
-     jf.load(dir + "Truline.jf"); // jockey factors
-     tf.load(dir + "Truline.tf"); // trainer factors
+     jf.load(dir + "Truline.jf"); // jockey strengths
+     tf.load(dir + "Truline.tf"); // trainer strengths
      rf.load(dir + "Truline.rf"); // race flow bets
      tt.load(dir + "Truline.tt"); // truline trainer stats
      jt.load(dir + "Truline.jt"); // truline jockey stats
@@ -173,7 +175,11 @@ public class Truline
     t3.load(dir + "Truline.t3"); // trainer surface 1-year stats
     tm.load(dir + "Truline.tm"); // trainer meet stats
     jm.load(dir + "Truline.jm"); // jockey meet stats
-      }
+    if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+     t4.load(dir + "Truline.t4"); // trainer jockey strengths
+     t5.load(dir + "Truline.t5"); // trainer jockey last 25
+    }
+   }
   } catch (Exception e) {
   }
   // Decode the runtime arguments.
@@ -269,6 +275,7 @@ public class Truline
   if (mode == GUIMODE && (file == null || !file.substring(0, 4).equals("LOAD"))) {
    // / GUI mode //////////////////////
    gui = new GUI();
+   gui.m_filename = file;
    Thread startthread = gui.startGetfile();
    gui.init();
    try {

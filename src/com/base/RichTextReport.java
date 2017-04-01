@@ -1139,10 +1139,22 @@ public void writeReport(PrintWriter out, Race race)
   out.println();
   out.println("\\par          Run Style Profile  " + race.m_runStyleProfile);
   if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
-   int cnt = 0;
-   while (cnt <= race.cntRaceFlows) {
-    out.println("\\par " + race.raceFlows[cnt]);
-    cnt++;
+   if (race.cntRaceFlows >= 0 || race.cntRaceFlowsAK >= 0)
+    out
+    .println("\\par =================================================================================================");
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+    int cnt = 20-race.cntRaceFlowsAK;
+    while (cnt <= 20) {
+     out.println(race.raceFlowsAK[cnt]);
+     cnt++;
+    }
+   }
+   else {
+    int cnt = 20-race.cntRaceFlows;
+    while (cnt <= 20) {
+     out.println(race.raceFlows[cnt]);
+     cnt++;
+    }
    }
   }
   out
@@ -1800,10 +1812,19 @@ public void writeHFReport(PrintWriter out, Race race)
    if (race.cntRaceFlows >= 0)
     out
     .println("\\par =================================================================================================");
-   int cnt = 0;
-   while (cnt <= race.cntRaceFlows) {
-    out.println("\\par \\b " + race.raceFlows[cnt]+" \\b0 ");
-    cnt++;
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+    int cnt = 20-race.cntRaceFlowsAK;
+    while (cnt <= 20) {
+     out.println(race.raceFlowsAK[cnt]);
+     cnt++;
+    }
+   }
+   else {
+    int cnt = 20-race.cntRaceFlows;
+    while (cnt <= 20) {
+     out.println(race.raceFlows[cnt]);
+     cnt++;
+    }
    }
   }
   out
@@ -1903,6 +1924,12 @@ public void writeHFReport(PrintWriter out, Race race)
        );
    }
    
+   /*  Print Fresh Horse Bonus Factor */
+   if (post.m_freshHorse && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y"))
+    out.println("\\par             "
+       + "\\b *** Fresh Horse Plus BONUS FACTOR *** \\b0 "
+       );
+    
    /*  Print Rep Race */
    out.println("\\par             "
       + post.m_repRaceDtl
@@ -1911,11 +1938,31 @@ public void writeHFReport(PrintWriter out, Race race)
    /*  Print Purse Change */
    if (!post.m_repRacePurseComp.equals(""))
     out.println("\\par             "
-      + post.m_repRacePurseComp
+      + "\\b "+post.m_repRacePurseComp+ "\\b0 "
       );
-   if (!post.m_lastRacePurseComp.equals(""))
+   if (!post.m_lastRacePurseComp.equals("")) {
+    if (post.m_lastRacePurseComp.indexOf("CLASS DOWN") >= 0 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y") && post.m_trainerClsChgDownOK && post.m_trainerClsChgDownROI > 1.99)
+     post.m_lastRacePurseComp = post.m_lastRacePurseComp + "- Trainer ROI is "+Lib.ftoa(post.m_trainerClsChgDownROI, 2)+" *** BONUS FACTOR *** \\b0"; 
     out.println("\\par             "
-      + post.m_lastRacePurseComp
+      + "\\b "+post.m_lastRacePurseComp+ "\\b0 "
+      );
+   }
+   
+   /*  Print Track Class Change */
+   if (!post.m_lastRaceTrackClass.equals(""))
+    out.println("\\par             "
+      + "\\b "+post.m_lastRaceTrackClass+ "\\b0 "
+      );
+   
+   /*  Print if more than 45 days since last race */
+   if (post.m_daysSinceLast > 45)
+    if (post.m_trainer45LayoffOK)
+     out.println("\\par             "
+       + "\\b Caution - More than 45 days since last race - "+post.m_daysSinceLast+" Days - but Trainer ROI is "+Lib.ftoa(post.m_trainer45LayoffROI, 2)+" \\b0"
+       );
+    else
+     out.println("\\par             "
+      + "\\b Caution - More than 45 days since last race - "+post.m_daysSinceLast+" Days \\b0"
       );
    
    /*  Print Form Cycle */
@@ -1945,14 +1992,25 @@ public void writeHFReport(PrintWriter out, Race race)
    int EPS = 0;
    if (starts > 0)
     EPS = earnings / starts;
-   out.println("\\par             Lifetime at Today's Distance="
-     + post.m_props.getProperty("LRDSTARTS", "0")+"/"
-     + post.m_props.getProperty("LRDWINS", "0")+"/"
-     + post.m_props.getProperty("LRDPLACES", "0")+"/"
-     + post.m_props.getProperty("LRDSHOWS", "0")+"/"
-     + post.m_props.getProperty("LRDEARNINGS", "0")
-     + "/EPS=" + EPS
-      );
+   if (!post.m_props.getProperty("LRDWINS", "0").equals("0"))    
+    out.println("\\b \\par             Lifetime at Today's Distance="
+      + post.m_props.getProperty("LRDSTARTS", "0")+"/"
+      + post.m_props.getProperty("LRDWINS", "0")+"/"
+      + post.m_props.getProperty("LRDPLACES", "0")+"/"
+      + post.m_props.getProperty("LRDSHOWS", "0")+"/"
+      + post.m_props.getProperty("LRDEARNINGS", "0")
+      + "/EPS=" + EPS + " \\b0"
+       );
+   else
+    out.println("\\par             Lifetime at Today's Distance="
+      + post.m_props.getProperty("LRDSTARTS", "0")+"/"
+      + post.m_props.getProperty("LRDWINS", "0")+"/"
+      + post.m_props.getProperty("LRDPLACES", "0")+"/"
+      + post.m_props.getProperty("LRDSHOWS", "0")+"/"
+      + post.m_props.getProperty("LRDEARNINGS", "0")
+      + "/EPS=" + EPS
+       );
+    
    
    /*  Print Record on Turf */
    if (race.m_surface.equals("T") || race.m_surface.equals("A"))
@@ -2042,6 +2100,17 @@ public void writeHFReport(PrintWriter out, Race race)
    out.println("\\par             "
      + "T-J=" + post.m_props.getProperty("TRAINER", "").trim() + " / " + post.m_props.getProperty("JOCKEY", "").trim()
      );
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+    if (post.m_trnJkyPctF > post.m_trnPctF+5 && post.m_trnJkyPctF > post.m_jkyPctF+5
+      && post.m_trnPctF > 20 && post.m_jkyPctF > 15)
+     out.println("\\par             "
+       + "    Top Trainer-Top Jockey Team - T-J="+post.m_trnJkyPctF+"% / T="+post.m_trnPctF+"% / J="+post.m_jkyPctF+"%   *** BONUS FACTOR ***"
+       );
+    if (post.m_jockeyTodayPrevWin)
+     out.println("\\par             "
+       + "    Jockey Change - Today's Jockey won previously on horse   *** BONUS FACTOR ***"
+       );
+   }
    if (!post.m_trnSurfaceStat.equals(""))
     out.println("\\par             "
       + "    Trainer Surface Stats Last year="
@@ -2089,7 +2158,7 @@ public void writeHFReport(PrintWriter out, Race race)
    }
    if (!post.m_trnJkyStat.equals(""))
     out.println("\\par             "
-      + "    \\b T-J Last 60 Days Stats="
+      + "    \\b T-J 1-Year Stats="
       + post.m_trnJkyStat + " \\b0"
       );
    if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
@@ -2098,6 +2167,24 @@ public void writeHFReport(PrintWriter out, Race race)
        + "    T-J Stats Last 12 Months="
        + post.m_trnJkyTrkStat
        );
+    if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+     if (!post.m_trnJkyTrkL25Stat5.equals(""))
+      if (post.m_last25)
+       out.println("\\par             "
+         + "    T-J Stats Last 5 Races="
+         + post.m_trnJkyTrkL25Stat5
+         );
+      else
+       out.println("\\par             "
+         + "    T-J Stats Last 5 Races="
+         + post.m_trnJkyTrkL25Stat5
+         );
+     if (!post.m_trnJkyTrkL25Stat10.equals(""))
+      out.println("\\par             "
+        + "    T-J Stats Last 10 Races="
+        + post.m_trnJkyTrkL25Stat10
+        );
+    }
     if (!post.m_trnOwnStat.equals(""))
      out.println("\\par             "
        + "    T-O Stats Last 2 years="
@@ -2120,8 +2207,17 @@ public void writeHFReport(PrintWriter out, Race race)
      itm = Lib.atoi(tjs.m_props.getProperty("TRAINERITM"+k, "0"));
      roi = Lib.atof(tjs.m_props.getProperty("TRAINERROI"+k, "0"));
      if ((!cat.equals("N/A") && (roi > 0)
-       && ((win > 19) || (itm > 49) || (roi > 1.99))))
-      if (roi > 1.99)
+       && ((win > 24) || (itm > 59) || (roi > 1.99))))
+      if (((win > 24 && roi > 1.99) || win > 29) && (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) &&
+         (cat.indexOf("Dwn 20Pct") >= 0 || cat.indexOf("3rdStart45") >= 0 ||
+         cat.indexOf("Claimed 1bk") >= 0)) 
+       out.println("\\par                            \\b "
+         + Lib.pad(cat, 18)
+         + Lib.pad(tjs.m_props.getProperty("TRAINERSTS"+k, " "), 6)
+         + Lib.pad(Lib.ftoa((int) win,0)+'%', 6)
+         + Lib.pad(Lib.ftoa((int) itm,0)+'%', 6)
+         + Lib.pad("$"+Lib.ftoa((double) roi, 2), 7)+" *** BONUS FACTOR *** \\b0");
+      else if (roi > 1.99)
        out.println("\\par                            \\b "
          + Lib.pad(cat, 18)
          + Lib.pad(tjs.m_props.getProperty("TRAINERSTS"+k, " "), 6)

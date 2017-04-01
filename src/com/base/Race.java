@@ -111,7 +111,9 @@ public class Race
                                                        // rep races (how many
                                                        // days to go back)
  String[]   raceFlows        = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+ String[]   raceFlowsAK      = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
  int        cntRaceFlows     = -1;
+ int        cntRaceFlowsAK   = -1;
  int        cntHorseFlows    = 0;
  int        totalPoints    = 0;
  Vector     ranking;                                  // Vector of Post objects

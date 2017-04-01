@@ -521,7 +521,7 @@ println("Launch Command:"+cmd);
 		String os = System.getProperty("os.name");
 //System.out.println("os="+os);
 		int osType;
-		if (os.startsWith("Windows NT") || os.startsWith("Windows 2000"))
+		if (os.startsWith("Windows"))
 			osType = WINNT;
 		else if (os.startsWith("Windows"))
 			osType = WIN95;
@@ -540,7 +540,7 @@ println("Launch Command:"+cmd);
 		case WINNT:		// WindowsNT, Windows2000
 			args = new String[4];
 			args[0] = "cmd.exe";
-			args[1] = "/E:1900";
+			args[1] = "/E:OFF";
 			args[2] = "/C";
 			args[3] = name;
 			break;

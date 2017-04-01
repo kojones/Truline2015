@@ -270,13 +270,22 @@ public void writeReport(GUI out, Race race)
   out.println();
   out.println("         Run Style Profile  " + race.m_runStyleProfile);
   if (Truline.userProps.getProperty("Experimental", "N").equals("Yes")) {
-   if (race.cntRaceFlows >= 0)
+   if (race.cntRaceFlows >= 0 || race.cntRaceFlowsAK >= 0)
     out
     .println("=============================================================================================");
-   int cnt = 0;
-   while (cnt <= race.cntRaceFlows) {
-    out.println(race.raceFlows[cnt]);
-    cnt++;
+   if (Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
+    int cnt = 20-race.cntRaceFlowsAK;
+    while (cnt <= 20) {
+     out.println(race.raceFlowsAK[cnt]);
+     cnt++;
+    }
+   }
+   else {
+    int cnt = 20-race.cntRaceFlows;
+    while (cnt <= 20) {
+     out.println(race.raceFlows[cnt]);
+     cnt++;
+    }
    }
   }
   out
