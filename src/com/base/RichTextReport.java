@@ -1948,6 +1948,13 @@ public void writeHFReport(PrintWriter out, Race race)
       );
    }
    
+   /*  Print Claim Change */
+   if (!post.m_lastRaceClaimComp.equals("")) {
+    out.println("\\par             "
+      + "\\b "+post.m_lastRaceClaimComp+ "\\b0 "
+      );
+   }
+   
    /*  Print Track Class Change */
    if (!post.m_lastRaceTrackClass.equals(""))
     out.println("\\par             "

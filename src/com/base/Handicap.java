@@ -201,8 +201,9 @@ public class Handicap
  public static final int TTCS       = 10;                      // TT + CS ranks
  public static final int FSTT       = 11;                      // FS + TT ranks
  public static final int PP         = 12;                      // Prime Power ranks
+ public static final int ML         = 13;                      // Morning Line ranks
  public static String[]  names     = { "FS", "SS", "FT", "TT", "CS", "AS",
-   "RE", "QP", "EN", "EPS","TTCS","FSTT","PP"        };
+   "RE", "QP", "EN", "EPS","TTCS","FSTT","PP","ML"        };
  public double[]         value     = new double[names.length]; // parameter
                                                                // values
  public int[]            rank      = new int[names.length];   // Handicap rank
@@ -210,6 +211,9 @@ public class Handicap
  public int              bonus     = 0;
  public int              bonusRank = 999;
  public int              formDaysLast = 0;
+ public int              cntPP = 0;
+ public int              cntClm = 0;
+ public double           lowestClmPrice = 999999;
  public boolean          extraFlg;                             // Extra energy
                                                                // flag
  public Performance      m_repRace = null;                     // Representitive
@@ -356,7 +360,8 @@ public class Handicap
    post.cntHorseFlows = -1;
    // If results posted and horse did not finish, it was scratched
    if (Truline.userProps.getProperty("PostResults", "N").equals("Y")
-     && race.m_resultsPosted.equals("Y") && post.m_finishPos.equals(""))
+     && race.m_resultsPosted.equals("Y") && !race.m_cloth1.equals("") 
+     && post.m_finishPos.equals(""))
     post.m_props.setProperty("ENTRY", "S");
    if (horseScratched(race, post) == true)
     post.m_props.setProperty("ENTRY", "S");
@@ -393,7 +398,7 @@ public class Handicap
   }
  }
  /**
-  * For a given horse in a race, determine its represntitive race and then
+  * For a given horse in a race, determine its representative race and then
   * compute its points. The points will establish the horse's ranking.
   */
  public void evaluateHorse(Race race, Post post)
@@ -403,12 +408,23 @@ public class Handicap
      + post.m_postPosition + " Horse: " + post.m_horseName + "\n");
    Log.print("                Weight: " + post.m_weight + "\n");
   }
-  // Select representitive race canidates:
-  Vector canidates = selectCandidates(race, post);
-  if (canidates == null)
+  // Select representative race candidates and evaluate elements of past performances
+  Vector candidates = selectCandidates(race, post);
+  
+  if (cntPP > 8 && cntClm == 0 && race.m_claim > 0)
+   post.m_firstClmRace = true;
+  else 
+   post.m_firstClmRace = false;
+  
+  if (cntPP > 8 && race.m_claim > 0 && race.m_claim < lowestClmPrice)
+   post.m_lowestClmPrice = true;
+  else
+   post.m_lowestClmPrice = false;
+  
+  if (candidates == null)
    return;
   // Determine which of the candidates is the best rep race.
-  determineRepRace(race, post, canidates);
+  determineRepRace(race, post, candidates);
   if (m_repRace != null) {
    int repRaceDays = getDifferenceDays(m_repRace.ppRaceDate,race.m_raceDate);
    // if (repRaceDays == formDaysLast)
@@ -445,6 +461,9 @@ public class Handicap
   value[EPS] = computeEPS(race, post);
   // compute PP (Prime Power)
   value[PP] = post.m_primePower;
+  // store ML (Morning Line)
+  double ml = Lib.atof(post.m_props.getProperty("MORNINGLINE"));
+  value[ML] = ml;
  }
  /**
   * Select representitive race candidates: Consider only if:
@@ -486,13 +505,16 @@ public class Handicap
    Log.print("  Selecting Candidates for Rep Race:\n");
   }
   int cntForm = -1;
-  int cntPP = 0;
+  cntPP = 0;
   post.m_formCycle = "Last 10=";
   post.m_formCycle2 = "       ";
   post.m_formCycle3 = "       ";
   post.m_formCycle4 = "       ";
   post.m_formCycle5 = "       ";
   post.m_freshHorse = false;
+  post.m_daysSinceLast = -1;
+  post.m_finishPosLast = -1;
+
 
   int days1 = 0;
   int finish1 = 0;
@@ -545,6 +567,8 @@ public class Handicap
    }
    p.isExcluded = false;
    String pSurface = p.m_props.getProperty("PPSURFACE", "").toUpperCase();
+   String pFavorite = p.m_props.getProperty("FAVORITE", "");
+   String pTrkCond = p.m_props.getProperty("CONDITION", "").toUpperCase();
    pAllweather = p.m_props.getProperty("ALLWEATHER", "").toUpperCase();
    if (pAllweather.equals("A"))
     pSurface = pAllweather;
@@ -554,7 +578,7 @@ public class Handicap
    double formSpeed = p.variant+p.drfSpeed;
    String pracetype = p.m_props.getProperty("PPRACETYPE", "");
    int finishPos = Lib.atoi(p.m_props.getProperty("POSITION6", "99"));
-
+   
    // Find track class for PP
    double pTrackClass = 0;
    Properties classData = Truline.pc.get("TRACK", p.ppTrack);
@@ -569,27 +593,60 @@ public class Handicap
    String pJockey = p.m_props.getProperty("PPJOCKEY");
    if (pJockey == null)
     pJockey = "None";
+   String pTrainer = p.m_props.getProperty("PPTRAINER");
+   if (pTrainer == null)
+    pTrainer = "None";
    int pPurse2 = Lib.atoi(p.m_props.getProperty("PPPURSE",Lib.ftoa((double) race.m_purse,0)));
+   int pClaim2 = Lib.atoi(p.m_props.getProperty("PPCLAIMPRICE","0"));
+   
+   if (pClaim2 > 0) {
+    cntClm++;
+    if (pClaim2 < lowestClmPrice)
+     lowestClmPrice = pClaim2;
+   }
+
    double pursePct = race.m_purse * 100 / pPurse2;
    double pursePctChg = pursePct - 100;
    String pursePctChgS = Lib.ftoa(pursePctChg,  0);
-   String purseChgS = "PP " + Lib.ftoa(pPurse2, 0) + " to today " + Lib.ftoa(purse, 0);
+   String purseChgS = "PP " + Lib.ftoa(pPurse2, 0) + " to today " + Lib.ftoa(race.m_purse, 0);
+   double claimPct = 100; 
+   double claimPctChg = 0;
+   if (pClaim2 > 0) {
+    claimPct = race.m_claim * 100 / pClaim2;
+    claimPctChg = claimPct - 100;
+   }
+   String claimPctChgS = Lib.ftoa(claimPctChg,  0);
+   String claimChgS = "PP " + Lib.ftoa(pClaim2, 0) + " to today " + Lib.ftoa(race.m_claim, 0);
    
    if (cntForm == -1) {
     if (!pJockey.equals(post.m_jockeyName))
      post.m_jockeyChgToday = true;
+    if (!pTrainer.equals(post.m_trainerName))
+     post.m_trainerChgToday = true;
     post.m_lastRacePurseComp = "";
     post.m_lastRaceClassChg = pursePct-100;
-    if (pursePct > 119) {
+    if (pursePct > 109) {
      post.m_lastRacePurseComp = "CLASS UP - Purse is "+Lib.ftoa((double) pursePct-100,0)+"%"+" more than Last Race ";
     }
-    if (pursePct < 81) {
+    if (pursePct < 91) {
       post.m_lastRacePurseComp = "CLASS DOWN - Purse is "+Lib.ftoa((double) 100-pursePct,0)+"%"+" less than Last Race "; 
+    }
+    if (claimPct > 109) {
+     post.m_lastRaceClaimComp = "CLASS UP - Claim price is "+Lib.ftoa((double) claimPct-100,0)+"%"+" more than Last Race ";
+    }
+    if (claimPct < 91) {
+      post.m_lastRaceClaimComp = "CLASS DOWN - Claim price is "+Lib.ftoa((double) 100-claimPct,0)+"%"+" less than Last Race "; 
     }
     if (pTrackClass > race.m_trackClass)
      post.m_lastRaceTrackClass = "CLASS UP - Track class is "+Lib.ftoa((double) race.m_trackClass,0)+".  Last Race was "+Lib.ftoa((double) pTrackClass,0)+ " ";
     else if (pTrackClass < race.m_trackClass)
      post.m_lastRaceTrackClass = "CLASS DOWN - Track class is "+Lib.ftoa((double) race.m_trackClass,0)+".  Last Race was "+Lib.ftoa((double) pTrackClass,0)+ " ";
+
+    // Set flag if last race MdnClm and was a win
+    if (pracetype.equals("M") && finishPos == 1)
+     post.m_lastMdnClmWin = true;
+    else
+     post.m_lastMdnClmWin = false;
    }
    
    int claim = Lib.atoi(p.m_props.getProperty("PPCLAIMPRICE"));
@@ -627,6 +684,16 @@ public class Handicap
     formDaysLast = formDays;
     post.m_daysSinceLast = formDays;
     post.m_finishPosLast = finishPos;
+
+    // Set flag if last race BIG WIN
+    if (!pracetype.equals("M") && finishPos == 1 && (pTrkCond.equals("FT") || pTrkCond.equals("FM"))
+         && Lib.atof(p.m_props.getProperty("LENLDRMGN4")) >= 5 
+         && (formDays < 30 || (formDays < 45 && (pracetype.equals("G1") || pracetype.equals("G2") 
+                                                  || pracetype.equals("G3") || pracetype.equals("N")))) 
+         && !post.m_jockeyChgToday && !post.m_trainerChgToday)
+     post.m_bigWinLast = true;
+    else
+     post.m_bigWinLast = false;
    }
    else if (cntForm == 0) {
     days2 = formDays;
@@ -692,15 +759,15 @@ public class Handicap
    if (cntForm < 9) {
     cntForm++;
     if (cntForm < 2)
-     post.m_formCycle = post.m_formCycle + (cntForm > 0 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);  
+     post.m_formCycle = post.m_formCycle + (cntForm > 0 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-"  + pracetype + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "+"+p.m_props.getProperty("LENLDRMGN4") : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);  
     else if (cntForm < 4)
-     post.m_formCycle2 = post.m_formCycle2 + (cntForm > 2 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle2 = post.m_formCycle2 + (cntForm > 2 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + pracetype + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
     else if (cntForm < 6)
-     post.m_formCycle3 = post.m_formCycle3 + (cntForm > 4 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle3 = post.m_formCycle3 + (cntForm > 4 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + pracetype + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
     else if (cntForm < 8)
-     post.m_formCycle4 = post.m_formCycle4 + (cntForm > 6 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle4 = post.m_formCycle4 + (cntForm > 6 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + pracetype + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
     else 
-     post.m_formCycle5 = post.m_formCycle5 + (cntForm > 8 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
+     post.m_formCycle5 = post.m_formCycle5 + (cntForm > 8 ? " / " : "") + formDays + "-" + p.m_props.getProperty("PPTRACK") + "-" + pSurface + "-" + pracetype + "-" + (p.ppDistance < 1540 ? "SP-" : (p.ppDistance <= 1760 ? "MD-" : "RT-")) + finishPos + (finishPos == 1 ? "" : "+"+p.m_props.getProperty("LENGTHS4")) + "-" + runstyle + "-" + Lib.ftoa((double) formSpeed, 0) + "-" + Lib.ftoa((int) pPurse, 0);
    }
    
    
@@ -899,7 +966,7 @@ public class Handicap
  {
   double adj;
   if (Log.isDebug(Log.TRACE))
-   Log.print("  Select Best Rep Race from Qualified Canidates\n");
+   Log.print("  Select Best Rep Race from Qualified candidates\n");
   // look at each candidate and determine the best match
   for (Enumeration c = candidates.elements(); c.hasMoreElements();) {
    Performance p = (Performance) c.nextElement();
@@ -1910,6 +1977,9 @@ public class Handicap
   else
    post.m_work4Week = "N";
    
+  post.m_daysSinceWork1 = 0;
+  post.m_daysSinceWork2 = 0;
+  post.m_daysSinceWork3 = 0;
   int work3Last = 0;
   int work4Last = 0;
   
@@ -1920,6 +1990,14 @@ public class Handicap
    String rank = props.getProperty("WORKRANK", "");
    double workQty = Lib.atof(props.getProperty("WORKQTY"));
    int daysB = Lib.dateDiff(post.m_work[i].m_workDate, race.m_raceDate); // workout to race
+   
+   if (i == 0)
+    post.m_daysSinceWork1 = daysB;
+   else if (i == 1)
+    post.m_daysSinceWork2 = daysB;
+   else if (i == 2)
+    post.m_daysSinceWork3 = daysB;
+   
    if (daysB <= 14 && d == 1100 && rank.equals("1") && workQty > 4)
     post.m_5furlongBullet = "@";
 
@@ -2177,12 +2255,12 @@ public class Handicap
       }
      }
     }
-    if (param == EPS & post.m_handicap.value[param] == 0 & noFS) {
+    if (param == EPS & post.m_daysSinceLast == -1) {
      race.m_cnt1st++;
     }
     if (post.m_handicap.value[param] > 0) {
-     if (param < AS) {
-      // Running line - smallest at top (but 0 sorts to bottom)
+     if (param < AS | param == ML) {
+      // Running line and Morning Line - smallest at top (but 0 sorts to bottom)
       for (i = 0; i < ranking[param].size(); i++) {
        Post p = (Post) ranking[param].elementAt(i);
        if (p.m_handicap.value[param] <= 0
@@ -2552,16 +2630,28 @@ public class Handicap
         sirePoints = 9;
         break;
       }
+      String sireAWDStr = sireData.getProperty("AWD");
+      switch (sireAWDStr) {
+       case "6":
+        sireAWDStr = "-SP ";
+        break;
+       case "7":
+        sireAWDStr = "-AVG";
+        break;
+       case "9":
+        sireAWDStr = "-RT ";
+        break;
+      }
       // Add in sire points only when option is "Yes"
       if (Truline.userProps.getProperty("SirePoints", "Y").equals("Y")) {
        post.m_handicap.points += sirePoints;
       }
       post.m_sireTS = "$";
       post.m_sireTSp = Lib.ftoa(sirePoints,0);
-      if (sirePoints == 9)
-       post.m_sireTSPI = "\\b Sire-"+post.m_sireName+"-"+sirePoints+" \\b0  ";
+      if (sirePoints == 9 || sireAWDStr.equals("-RT"))
+       post.m_sireTSPI = "\\b Sire-"+post.m_sireName+"-"+sirePoints+sireAWDStr+" \\b0  ";
       else
-       post.m_sireTSPI = "Sire-"+post.m_sireName+"-"+sirePoints+"  ";
+       post.m_sireTSPI = "Sire-"+post.m_sireName+"-"+sirePoints+sireAWDStr+"  ";
       if (Log.isDebug(Log.TRACE))
        Log.print("     Post# " + post.m_postPosition + ", Horse: "
          + post.m_horseName + " " + sirePoints + " points for turf sire\n");
@@ -2593,13 +2683,25 @@ public class Handicap
       if (Truline.userProps.getProperty("SirePoints", "Y").equals("Y")) {
        post.m_handicap.points += sirePoints;
       }
+      String sireAWDStr = damSireData.getProperty("AWD");
+      switch (sireAWDStr) {
+       case "6":
+        sireAWDStr = "-SP ";
+        break;
+       case "7":
+        sireAWDStr = "-AVG";
+        break;
+       case "9":
+        sireAWDStr = "-RT ";
+        break;
+      }
       post.m_sireTS2 = "d";
       if (sirePoints > 5)
        post.m_sireTS2 = "D";
       if (sirePoints == 9)
-       post.m_sireTSPI = post.m_sireTSPI+"\\b Dam Sire-"+post.m_damSireName+"-"+sirePoints+" \\b0  ";
+       post.m_sireTSPI = post.m_sireTSPI+"\\b Dam Sire-"+post.m_damSireName+"-"+sirePoints+sireAWDStr+" \\b0  ";
       else
-       post.m_sireTSPI = post.m_sireTSPI+"Dam Sire-"+post.m_damSireName+"-"+sirePoints;
+       post.m_sireTSPI = post.m_sireTSPI+"Dam Sire-"+post.m_damSireName+"-"+sirePoints+sireAWDStr;
       if (post.m_sireTS.equals("$"))
        race.m_cnt$d++;
       if (Log.isDebug(Log.TRACE))
@@ -2961,7 +3063,7 @@ public class Handicap
     continue; // position is empty or scratched
    
    // Get ML odds and caclulate our odds - set odds and DO
-   double ml = Lib.atoi(post.m_props.getProperty("MORNINGLINE"));
+   double ml = Lib.atof(post.m_props.getProperty("MORNINGLINE"));
    post.m_morningLineD = ml;
    if ((post.m_handicap.bonus + post.m_handicap.points) == 0 || race.totalPoints == 0)
     rawOdds = 30;
@@ -2988,57 +3090,67 @@ public class Handicap
    switch (tlOdds) {
     case ".1-1":
      post.m_truLine = "1-10";
-     if (ml >= 2)
+     post.m_truLineD = .1;
+     if (ml >= 1.5)
       post.m_truLineDO = "DO";
      break;
     case ".2-1":
      post.m_truLine = "1-5";
-     if (ml >= 2)
+     post.m_truLineD = .2;
+     if (ml >= 1.5)
       post.m_truLineDO = "DO";
      break;
     case ".3-1":
     case ".4-1":
     case ".5-1":
      post.m_truLine = "1-2";
-     if (ml >= 2)
+     post.m_truLineD = .5;
+     if (ml >= 1.5)
       post.m_truLineDO = "DO";
      break;
     case ".6-1":
      post.m_truLine = "3-5";
-     if (ml >= 2)
+     post.m_truLineD = .6;
+     if (ml >= 1.5)
       post.m_truLineDO = "DO";
      break;
     case ".7-1":
     case ".8-1":
      post.m_truLine = "4-5";
-     if (ml >= 2)
+     post.m_truLineD = .8;
+     if (ml >= 1.6)
       post.m_truLineDO = "DO";
      break;
     case "1.1-1":
     case "1.2-1":
      post.m_truLine = "6-5";
-     if (ml >= 3)
+     post.m_truLineD = 1.2;
+     if (ml >= 2.5)
       post.m_truLineDO = "DO";
      break;
     case "1.3-1":
     case "1.4-1":
      post.m_truLine = "7-5";
+     post.m_truLineD = 1.4;
      if (ml >= 3)
       post.m_truLineDO = "DO";
      break;
     case "1.5-1":
      post.m_truLine = "3-2";
-     if (ml >= 4)
+     post.m_truLineD = 1.5;
+     if (ml >= 3)
       post.m_truLineDO = "DO";
      break;
     case "1.6-1":
      post.m_truLine = "8-5";
-     if (ml >= 4)
+     post.m_truLineD = 1.6;
+     if (ml >= 3.5)
       post.m_truLineDO = "DO";
      break;
     case "1.7-1":
     case "1.8-1":
      post.m_truLine = "9-5";
+     post.m_truLineD = 1.8;
      if (ml >= 4)
       post.m_truLineDO = "DO";
      break;
@@ -3046,13 +3158,15 @@ public class Handicap
     case "2.4-1":
     case "2.5-1":
      post.m_truLine = "5-2";
-     if (ml >= 6)
+     post.m_truLineD = 2.5;
+     if (ml >= 5)
       post.m_truLineDO = "DO";
      break;
     case "3.3-1":
     case "3.4-1":
     case "3.5-1":
      post.m_truLine = "7-2";
+     post.m_truLineD = 3.5;
      if (ml >= 7)
       post.m_truLineDO = "DO";
      break;
@@ -3060,16 +3174,20 @@ public class Handicap
     case "4.4-1":
     case "4.5-1":
      post.m_truLine = "9-2";
+     post.m_truLineD = 4.5;
      if (ml >= 9)
       post.m_truLineDO = "DO";
      break;
     default:
-     if (rawOdds > 30)
+     if (rawOdds > 30) {
       tlOdds = "30";
-     else
+     }
+     else {
       tlOdds = Lib.ftoa((float) rawOdds, 0);
+     }
      int oddsDO = Integer.valueOf(tlOdds) * 2;
      post.m_truLine = tlOdds+"-1";
+     post.m_truLineD = Integer.valueOf(tlOdds);
      if (ml >= oddsDO)
       post.m_truLineDO = "DO";
      break;
@@ -4278,16 +4396,16 @@ public class Handicap
   if (Truline.userProps.getProperty("Experimental", "No").equals("No")) {
    for (Enumeration c = Truline.tj.elements(); c.hasMoreElements();) {
     Properties prop = (Properties) c.nextElement();
-    String track = prop.getProperty("TRACK");
+    // String track = prop.getProperty("TRACK");
     String trainer = prop.getProperty("TRAINER");
     String jockey = prop.getProperty("JOCKEY");
     String flowBet = prop.getProperty("FLOWBET");
-    if (track.equals(race.m_track) && trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
+    if (trainer.equals(post.m_trainerName) && jockey.equals(post.m_jockeyName)) {
      if (flowBet.equals("Y")) {
       post.m_trnJkyHot = "$";
       if (race.cntRaceFlows < 20) {
        race.cntRaceFlows++;
-       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 60-day Trainer-Jockey "+trainer+"+"+jockey;
+       race.raceFlows[race.cntRaceFlows] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" National Trainer-Jockey "+trainer+"+"+jockey;
       }
      }
      else
@@ -4331,7 +4449,7 @@ public class Handicap
        if (race.cntRaceFlowsAK < 20 && Truline.userProps.getProperty("ArtAndKim", "N").equals("Y")) {
         // if (post.m_morningLineD >= 3.5 && post.m_morningLineD <= 8) {
          race.cntRaceFlowsAK++;
-         race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" 1-year Trainer-Jockey "+trainer+"+"+jockey;
+         race.raceFlowsAK[race.cntRaceFlowsAK] = String.format("%-22s", post.cloth+" "+post.m_horseName)+" Track Trainer-Jockey "+trainer+"+"+jockey;
         // }
        }
       }
@@ -4627,7 +4745,8 @@ public class Handicap
       
      if (cat.indexOf("1stStart45") >= 0) {
       post.m_trainer45LayoffROI = roi;
-      post.m_trainer45LayoffOK = true;
+      if (win > 24 || (win > 14 && roi > 2))
+        post.m_trainer45LayoffOK = true;
      }
      
      if (cat.indexOf("3rdStart45") >= 0) {

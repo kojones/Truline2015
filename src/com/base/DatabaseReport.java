@@ -617,17 +617,22 @@ public class DatabaseReport
   prop.setProperty("JOCKEY_NAME", post.m_jockeyName);
   prop.setProperty("JOCKEY_WIN_PCT", Lib.ftoa((int) post.m_jkyPct, 0));
   prop.setProperty("DIST_WINS", post.m_props.getProperty("LRDWINS", "").trim());
+  prop.setProperty("DIST_PLACES", post.m_props.getProperty("LRDPLACES", "").trim());
   prop.setProperty("DIST_RACES", post.m_props.getProperty("LRDSTARTS", "").trim());
   prop.setProperty("TRACK_WINS", post.m_props.getProperty("LRTWINS", "").trim());
+  prop.setProperty("TRACK_PLACES", post.m_props.getProperty("LRTPLACES", "").trim());
   prop.setProperty("TRACK_RACES", post.m_props.getProperty("LRTSTARTS", "").trim());
   if (race.m_surface.equals("T")) {
-   prop.setProperty("DIST_WINS", post.m_props.getProperty("LRTURFWINS", "0").trim());
-   prop.setProperty("DIST_RACES", post.m_props.getProperty("LRTURFSTARTS", "0").trim());
+   prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRTURFWINS", "0").trim());
+   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRTURFPLACES", "0").trim());
+   prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRTURFSTARTS", "0").trim());
   } else if (race.m_surface.equals("A")) {
    prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRAWEWINS", "0").trim());
+   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRAWEPLACES", "0").trim());
    prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRAWESTARTS", "0").trim());
   } else {
    prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRDIRTWINS", "0").trim());
+   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRDIRTPLACES", "0").trim());
    prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRDIRTSTARTS", "0").trim());
   }
   prop.setProperty("RUNNING_STYLE", post.m_props.getProperty("RUNSTYLE", "").trim());
@@ -892,11 +897,28 @@ public class DatabaseReport
    repRaceDate = "";
   prop.setProperty("RE_RACE_DATE", repRaceDate);
   prop.setProperty("CNT_TOPRANKS", Lib.ftoa((int) post.m_topRanks, 0));
-  prop.setProperty("ODDS", post.m_odds);
+  prop.setProperty("ODDS", Lib.ftoa((double) post.m_truLineD, 1));
   prop.setProperty("POINTS_ADV", Lib.ftoa((int) post.m_pointsAdv, 0));
   prop.setProperty("BF_FACTORS", Lib.ftoa((int) post.m_betfactors, 0));
   prop.setProperty("TF_FACTORS", Lib.ftoa((int) post.m_trnfactors, 0));
   prop.setProperty("FLOW_BETS", Lib.ftoa((int) post.cntHorseFlows, 0));
+  prop.setProperty("DAYS_SINCE_LAST", Lib.ftoa((int) post.m_daysSinceLast, 0));
+  prop.setProperty("DAYS_SINCE_WORK1", Lib.ftoa((int) post.m_daysSinceWork1, 0));
+  prop.setProperty("DAYS_SINCE_WORK2", Lib.ftoa((int) post.m_daysSinceWork2, 0));
+  prop.setProperty("DAYS_SINCE_WORK3", Lib.ftoa((int) post.m_daysSinceWork3, 0));
+  prop.setProperty("LAYOFF_OK_TRN", post.m_trainer45LayoffOK ? "T" : "F");
+  if (post.m_lastRaceTrackClass.equals(""))  
+   prop.setProperty("TRACK_CLASS_CHG", "");
+  else
+   prop.setProperty("TRACK_CLASS_CHG", post.m_lastRaceTrackClass.substring(6, 7));
+  prop.setProperty("LAST_RACE_PURSE_CHG", Lib.ftoa(post.m_lastRaceClassChg, 0));
+  prop.setProperty("LAST_RACE_CLAIM_CHG", Lib.ftoa(post.m_lastRaceClaimChg, 0));
+  prop.setProperty("FIRST_CLM_RACE", post.m_firstClmRace ? "T" : "F");
+  prop.setProperty("LOWEST_CLM_PRICE", post.m_lowestClmPrice ? "T" : "F");
+  prop.setProperty("BIG_WIN_LAST", post.m_bigWinLast ? "T" : "F");
+  prop.setProperty("MDN_CLM_WIN_LAST", post.m_lastMdnClmWin ? "T" : "F");
+  prop.setProperty("JOCKEY_CHG", post.m_jockeyChgToday ? "T" : "F");
+  prop.setProperty("TRAINER_CHG", post.m_trainerChgToday ? "T" : "F");
   sql = makeInsert("RACE_POST_HANDICAP", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();

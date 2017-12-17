@@ -1118,6 +1118,7 @@ public class Bris
        post.m_ownerName = post.m_props.getProperty("OWNER");
        post.m_runStyle = post.m_props.getProperty("RUNSTYLE");
        post.m_quirin = Lib.atoi(post.m_props.getProperty("QUIRIN"));
+       post.m_claim = Lib.atoi(post.m_props.getProperty("CLAIMPRICE", "0"));
        post.m_sireName = post.m_horse.m_props.getProperty("SIRE");
        int idx1 = post.m_sireName.indexOf("(");
        if (idx1 > 0)
