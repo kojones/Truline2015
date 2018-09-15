@@ -26,7 +26,7 @@ public class DatabaseReport
  boolean                   first_race = true;
  String                    sql;
  public static String[] names        = { "FS", "SS", "FT", "TT", "CS", "AS",
-  "RE", "QP", "EN", "EPS", "TTCS"          };
+  "RE", "QP", "EN", "EPS", "TTCS","FSTT","PP","ML"          };
  public int[]           biasPoints   = new int[names.length]; // Bias points Dirt
  public int[]           biasPointsT   = new int[names.length]; // Bias points Turf
  public int[]           biasPointsR  = new int[names.length]; // Bias points
@@ -203,11 +203,11 @@ public class DatabaseReport
    sql = makeDelete("RACE_POST_HANDICAP", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
-   if (!race.m_resultsPosted.equals("Y")) {
+//   if (!race.m_resultsPosted.equals("Y")) {
     sql = makeDelete("RACE_POST_FLOW_BET", prop);
     psqlStmt = connect.prepareStatement(sql);
     psqlStmt.executeUpdate();
-   }
+//   }
    sql = makeDelete("RACE_FLOW_BET", prop);
    psqlStmt = connect.prepareStatement(sql);
    psqlStmt.executeUpdate();
@@ -612,6 +612,15 @@ public class DatabaseReport
   prop.setProperty("SEX", post.m_sex);
   prop.setProperty("MORNING_LINE", post.m_props.getProperty("MORNINGLINE", ""));
   prop.setProperty("MORNING_LINE_P", post.m_morningLine);
+  String entry = post.m_props.getProperty("ENTRY", "");
+  if (entry.equals("S")) 
+   prop.setProperty("ML_RANK","99");
+  else
+   prop.setProperty("ML_RANK",Lib.ftoa((int) post.m_handicap.rank[Handicap.ML], 0));
+  if (entry.equals("S")) 
+   prop.setProperty("FO_RANK","99");
+  else
+   prop.setProperty("FO_RANK",Lib.ftoa((int) post.m_handicap.rank[Handicap.FO], 0));
   prop.setProperty("TRAINER_NAME", post.m_trainerName);
   prop.setProperty("TRAINER_WIN_PCT", Lib.ftoa((int) post.m_trnPct, 0));
   prop.setProperty("JOCKEY_NAME", post.m_jockeyName);
@@ -619,21 +628,33 @@ public class DatabaseReport
   prop.setProperty("DIST_WINS", post.m_props.getProperty("LRDWINS", "").trim());
   prop.setProperty("DIST_PLACES", post.m_props.getProperty("LRDPLACES", "").trim());
   prop.setProperty("DIST_RACES", post.m_props.getProperty("LRDSTARTS", "").trim());
+  prop.setProperty("LIFE_WINS", post.m_props.getProperty("LIFETIMEWINS", "").trim());
+//prop.setProperty("LIFE_PLACES", post.m_props.getProperty("LRTPLACES", "").trim());
+  prop.setProperty("LIFE_RACES", post.m_props.getProperty("LIFETIMESTARTS", "").trim());
   prop.setProperty("TRACK_WINS", post.m_props.getProperty("LRTWINS", "").trim());
-  prop.setProperty("TRACK_PLACES", post.m_props.getProperty("LRTPLACES", "").trim());
+//prop.setProperty("TRACK_PLACES", post.m_props.getProperty("LRTPLACES", "").trim());
   prop.setProperty("TRACK_RACES", post.m_props.getProperty("LRTSTARTS", "").trim());
   if (race.m_surface.equals("T")) {
    prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRTURFWINS", "0").trim());
-   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRTURFPLACES", "0").trim());
+//   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRTURFPLACES", "0").trim());
    prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRTURFSTARTS", "0").trim());
   } else if (race.m_surface.equals("A")) {
    prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRAWEWINS", "0").trim());
-   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRAWEPLACES", "0").trim());
+//   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRAWEPLACES", "0").trim());
    prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRAWESTARTS", "0").trim());
   } else {
-   prop.setProperty("SURFACE_WINS", post.m_props.getProperty("LRDIRTWINS", "0").trim());
-   prop.setProperty("SURFACE_PLACES", post.m_props.getProperty("LRDIRTPLACES", "0").trim());
-   prop.setProperty("SURFACE_RACES", post.m_props.getProperty("LRDIRTSTARTS", "0").trim());
+   int surf = Lib.atoi(post.m_props.getProperty("LIFETIMEWINS", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRTURFWINS", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRAWEWINS", "0"));
+   prop.setProperty("SURFACE_WINS", Lib.ftoa((int) surf, 0));
+   surf = Lib.atoi(post.m_props.getProperty("LIFETIMEPLACES", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRTURFPLACES", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRAWEPLACES", "0"));
+//   prop.setProperty("SURFACE_PLACES", Lib.ftoa((int) surf, 0));
+   surf = Lib.atoi(post.m_props.getProperty("LIFETIMESTARTS", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRTURFSTARTS", "0"))
+     - Lib.atoi(post.m_props.getProperty("LRAWESTARTS", "0"));
+   prop.setProperty("SURFACE_RACES", Lib.ftoa((int) surf, 0));
   }
   prop.setProperty("RUNNING_STYLE", post.m_props.getProperty("RUNSTYLE", "").trim());
   String ownerName = post.m_props.getProperty("OWNER");
@@ -922,6 +943,9 @@ public class DatabaseReport
   sql = makeInsert("RACE_POST_HANDICAP", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();
+  if (post.m_trnJkyfactorsSD.equals("Y") || post.m_trnJkyfactorsTYP.equals("Y")
+    || post.m_trnJkyfactorsFAV.equals("Y") || post.m_trnJkyfactorsTRN.equals("Y"))
+     insertRacePostFlowBet(race, post);
   // if (post.cntHorseFlows >= 0)
   //  insertRacePostFlowBet(race, post);
  }
@@ -932,22 +956,41 @@ public class DatabaseReport
      + race.m_props.getProperty("RACENO") + "/"
      + Lib.ftoa((int) post.m_postPosition, 0) + "\n");
   Properties prop = new Properties();
-  prop.setProperty("TRACK_ABBR", race.m_track);
   prop.setProperty("DATE_RACE", race.m_props.getProperty("RACEDATE"));
+  prop.setProperty("TRACK_ABBR", race.m_track);
   prop.setProperty("RACE_NO", race.m_props.getProperty("RACENO"));
   prop.setProperty("SADDLE_CLOTH", post.cloth);
-  prop.setProperty("POST_POS", Lib.ftoa((int) post.m_postPosition, 0));
-  prop.setProperty("FLOW_BETS", Lib.ftoa((int) post.cntHorseFlows, 0));
-  prop.setProperty("FLOW_BET_1", post.horseFlows[0]);
-  prop.setProperty("FLOW_BET_2", post.horseFlows[1]);
-  prop.setProperty("FLOW_BET_3", post.horseFlows[2]);
-  prop.setProperty("FLOW_BET_4", post.horseFlows[3]);
-  prop.setProperty("FLOW_BET_5", post.horseFlows[4]);
-  prop.setProperty("FLOW_BET_6", post.horseFlows[5]);
-  prop.setProperty("FLOW_BET_7", post.horseFlows[6]);
-  prop.setProperty("FLOW_BET_8", post.horseFlows[7]);
-  prop.setProperty("FLOW_BET_9", post.horseFlows[8]);
-  prop.setProperty("FLOW_BET_10", post.horseFlows[9]);
+  prop.setProperty("HORSE_NAME", post.m_horseName);
+  prop.setProperty("DAYS_SINCE_LAST", Lib.ftoa((int) post.m_daysSinceLast, 0));
+  if (post.m_lastRaceTrackClass.equals(""))  
+   prop.setProperty("TRACK_CLASS_CHG", "");
+  else
+   prop.setProperty("TRACK_CLASS_CHG", post.m_lastRaceTrackClass.substring(6, 7));
+  prop.setProperty("CNT_FTS", Lib.ftoa((int) race.m_cnt1st, 0));
+  prop.setProperty("RACE_TYPE", race.m_raceType);
+  prop.setProperty("RACE_SURFACE", race.m_surfaceLC);
+  if (race.m_allweather.equals("A"))
+   prop.setProperty("RACE_SURFACE", race.m_allweather);   
+  prop.setProperty("DIST", Lib.ftoa(((double) race.m_distance) / Handicap.YdPerF, 1) + "F");
+  prop.setProperty("SD", post.m_trnJkyfactorsSD);
+  prop.setProperty("TYP", post.m_trnJkyfactorsTYP);
+  prop.setProperty("SEX", post.m_trnJkyfactorsSEX);
+  prop.setProperty("AGE", post.m_trnJkyfactorsAGE);
+  prop.setProperty("FTS", post.m_trnJkyfactorsFTS);
+  prop.setProperty("LAYOFF", post.m_trnJkyfactorsLAY);
+  prop.setProperty("FAV", post.m_trnJkyfactorsFAV);
+  prop.setProperty("SOURCE", post.m_trnJkyfactorsSOURCE);
+  prop.setProperty("TRAINER_NAME", post.m_trainerName);
+  prop.setProperty("TRAINER_WIN_PCT", Lib.ftoa((int) post.m_trnPct, 0));
+  prop.setProperty("JOCKEY_NAME", post.m_jockeyName);
+  prop.setProperty("JOCKEY_WIN_PCT", Lib.ftoa((int) post.m_jkyPct, 0));
+  prop.setProperty("BONUS_RANK", Lib.ftoa((int) post.m_handicap.bonusRank, 0));
+  prop.setProperty("MORNING_LINE", Lib.ftoa((double) post.m_morningLineD,2));
+  prop.setProperty("ODDS", post.m_odds);
+  prop.setProperty("FINISH_POS", post.m_finishPos);
+  prop.setProperty("WIN_PAY", post.m_winPayoff);
+  prop.setProperty("PLC_PAY", post.m_placePayoff);
+  prop.setProperty("SHw_PAY", post.m_showPayoff);
   sql = makeInsert("RACE_POST_FLOW_BET", prop);
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();

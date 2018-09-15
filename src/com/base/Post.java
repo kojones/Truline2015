@@ -116,6 +116,15 @@ class Post
  String     m_jkyfactorsPR       = "";
  String     m_trnfactorsPR       = "";
  String     m_trnJkyfactorsPR    = "";
+ String     m_trnJkyfactorsSD    = "";
+ String     m_trnJkyfactorsTYP   = "";
+ String     m_trnJkyfactorsSEX   = "";
+ String     m_trnJkyfactorsAGE   = "";
+ String     m_trnJkyfactorsFTS   = "";
+ String     m_trnJkyfactorsLAY   = "";
+ String     m_trnJkyfactorsFAV   = "";
+ String     m_trnJkyfactorsTRN   = "";
+ String     m_trnJkyfactorsSOURCE = "";
  String     m_morningLine        = "";
  double     m_morningLineD       = 0;
  double     m_primePower         = 0;
