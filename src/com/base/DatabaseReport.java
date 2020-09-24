@@ -944,7 +944,8 @@ public class DatabaseReport
   psqlStmt = connect.prepareStatement(sql);
   psqlStmt.executeUpdate();
   if (post.m_trnJkyfactorsSD.equals("Y") || post.m_trnJkyfactorsTYP.equals("Y")
-    || post.m_trnJkyfactorsFAV.equals("Y") || post.m_trnJkyfactorsTRN.equals("Y"))
+    || post.m_trnJkyfactorsFAV.equals("Y") || post.m_trnJkyfactorsTRN.equals("Y")
+    || post.m_trnJkyfactorsWP.equals("Y"))
      insertRacePostFlowBet(race, post);
   // if (post.cntHorseFlows >= 0)
   //  insertRacePostFlowBet(race, post);
@@ -976,7 +977,7 @@ public class DatabaseReport
   prop.setProperty("TYP", post.m_trnJkyfactorsTYP);
   prop.setProperty("SEX", post.m_trnJkyfactorsSEX);
   prop.setProperty("AGE", post.m_trnJkyfactorsAGE);
-  prop.setProperty("FTS", post.m_trnJkyfactorsFTS);
+  prop.setProperty("FTS", post.m_trnJkyfactorsWP);
   prop.setProperty("LAYOFF", post.m_trnJkyfactorsLAY);
   prop.setProperty("FAV", post.m_trnJkyfactorsFAV);
   prop.setProperty("SOURCE", post.m_trnJkyfactorsSOURCE);
