@@ -124,6 +124,7 @@ class Post
  String     m_trnJkyfactorsLAY   = "";
  String     m_trnJkyfactorsFAV   = "";
  String     m_trnJkyfactorsTRN   = "";
+ String     m_trnJkyfactorsWP    = "";
  String     m_trnJkyfactorsSOURCE = "";
  String     m_morningLine        = "";
  double     m_morningLineD       = 0;
