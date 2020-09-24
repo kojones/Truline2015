@@ -4017,6 +4017,7 @@ public class Handicap
   Boolean TYP = false;
   Boolean FAV = false;
   Boolean TRN = false;
+  Boolean WP = false;
   int cnt = 0;
   for (Enumeration c = Truline.t4.elements(); c.hasMoreElements();) {
    Properties prop = (Properties) c.nextElement();
@@ -4068,6 +4069,7 @@ public class Handicap
    Boolean LAYOFF = (layoff != null);
    FAV = (fav != null);
    TRN = (jockey == null);
+   WP = (source.substring(6, 8).equals("WP"));
    
    if (track == null || track.equals("All") || (track != null && track.equals(race.m_track))) 
    {
@@ -4077,7 +4079,7 @@ public class Handicap
      activeT4X = race_date.compareTo(stop_date);
     if (activeT4 > -1 && activeT4X < 0)
     {
-     if (SD1 || SD2 || SD3 || TYP || FAV || TRN)
+     if (SD1 || SD2 || SD3 || TYP || FAV || TRN || WP)
 //      if (SD1 || SD2 || SD3 || TYP || AGE || SEX || FTS || LAYOFF || FAV)
      {
       trnJkyFactors.addElement(prop);
@@ -4112,6 +4114,7 @@ public class Handicap
    post.m_trnJkyfactorsLAY = "";
    post.m_trnJkyfactorsFAV = "";
    post.m_trnJkyfactorsTRN = "";
+   post.m_trnJkyfactorsWP = "";
    post.m_trnJkyfactorsSOURCE = "";
    // Look at each trainer jockey factor
    int cnt_trainer_jockey_factors = 0;
@@ -4167,6 +4170,8 @@ public class Handicap
       post.m_trnJkyfactorsFAV = "N";
      if (jockey == null)
       post.m_trnJkyfactorsTRN = "Y";
+     if (source.substring(6, 8).equals("WP"))
+      post.m_trnJkyfactorsWP = "Y";
       
 
 /* ---- Removed for Art and Kim flow bet logic
