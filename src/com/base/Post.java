@@ -228,6 +228,7 @@ class Post
  String     m_bias               = "";
  String     m_work3Short         = "";
  String     m_work4Week          = "";
+ int        m_workCnt            = 0;
  int        m_biasN              = 0;
  String     m_finishPos          = "";
  String     m_odds               = "";

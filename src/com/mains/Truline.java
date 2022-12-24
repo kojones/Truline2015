@@ -69,8 +69,8 @@ import com.base.TextReport;
 public class Truline
 {
  public static String         title        = "Truline 2015";
- public static String         version      = "Version 2.1 4/2/2016";
- public static String         copyright    = "Copyright(c) 2001,2016 Spinning Electrons, LLC";
+ public static String         version      = "Version 2.1 5/1/2021";
+ public static String         copyright    = "Copyright(c) 2001,2021 Spinning Electrons, LLC";
  public static String         m_handicapVersion = "hf2015v1";
  public static String         m_trulineVersion  = "2.1.0";
  public static Properties     userProps    = new Properties();

@@ -1953,12 +1953,15 @@ public class Handicap
   // Assume unused m_work elements contain null dates.
   int len;
   // Set this flag if 5 furlong bullet work in last 14 days
+  post.m_4furlongBullet = "";
   post.m_5furlongBullet = "";
 
   for (len = 0; len < post.m_work.length; len++) {
    if (post.m_work[len] == null || post.m_work[len].m_workDate == null)
     break;
   }
+  // set count for output
+  post.m_workCnt = len;
   // for (int i = 0; i < 12; i++)
   // {
   // if (post.m_work[i] != null && post.m_work[i].m_workDate != null)
@@ -2008,9 +2011,18 @@ public class Handicap
    else if (i == 2)
     post.m_daysSinceWork3 = daysB;
    
-   if (daysB <= 14 && d == 1100 && rank.equals("1") && workQty > 4)
-    post.m_5furlongBullet = "@";
+   if (daysB <= 28 && d == 880 && rank.equals("1") && workQty > 4 && post.m_5furlongBullet.equals(""))
+    post.m_5furlongBullet = "@4_" + daysB + "_" + Lib.ftoa(workQty, 0);
 
+   if (daysB <= 28 && d == 1100 && rank.equals("1") && workQty > 4 && post.m_5furlongBullet.equals(""))
+     post.m_5furlongBullet = "@5_" + daysB + "_" + Lib.ftoa(workQty, 0);
+
+/*   if (daysB <= 14 && d == 880 && rank.equals("1") && workQty > 4 && post.m_5furlongBullet.equals(""))
+    post.m_5furlongBullet = "@4";
+
+   if (daysB <= 14 && d == 1100 && rank.equals("1") && workQty > 4 && post.m_5furlongBullet.equals(""))
+    post.m_5furlongBullet = "@5_";
+*/
    if (i == 0 && daysB > 12)
     post.m_work3Short = "N";
    else {

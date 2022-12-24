@@ -55,7 +55,7 @@ public class DatabaseReport
     // This will load the MySQL driver, each DB has its own driver
     Class.forName("com.mysql.jdbc.Driver");
     // Setup the connection with the DB
-    connect = DriverManager.getConnection("jdbc:mysql://localhost/"
+    connect = DriverManager.getConnection("jdbc:mysql://127.0.0.1/"
       + databaseName + "?" + "user=truline&password=4crossPP");
     insertHandicapOptions();
    }
@@ -289,6 +289,8 @@ public class DatabaseReport
   for (Enumeration e = race.m_posts.elements(); e.hasMoreElements();) {
    Post post = (Post) e.nextElement();
    insertRacePost(race, post);
+/*   if (post.m_workCnt > 4)  */
+       insertRacePostWork(race, post);
    if (m_mode == Truline.DATABASE1) {
     insertRacePostProperties(race, post);
     for (Enumeration e1 = post.m_performances.elements(); e1.hasMoreElements();) {
@@ -298,7 +300,7 @@ public class DatabaseReport
     }
     for (int i = 0; i < post.m_work.length; i++) {
      if (post.m_work[i].m_workDate != null) {
-      insertRacePostWork(race, post, post.m_work[i]);
+      insertRacePostWork(race, post);
      }
     }
    }
@@ -764,7 +766,7 @@ public class DatabaseReport
    }
   }
  }
- private void insertRacePostWork(Race race, Post post, Workout w)
+ private void insertRacePostWork(Race race, Post post)
    throws Exception
  {
   if (Log.isDebug(Log.TRACE))
@@ -777,18 +779,53 @@ public class DatabaseReport
   prop.setProperty("RACE_NO", race.m_props.getProperty("RACENO"));
   prop.setProperty("SADDLE_CLOTH", post.cloth);
   prop.setProperty("POST_POS", Lib.ftoa((int) post.m_postPosition, 0));
-  prop.setProperty("DATE_WORK", Lib.datetoa(w.m_workDate));
-  for (Enumeration e = w.m_props.propertyNames(); e.hasMoreElements();) {
-   String name = (String) e.nextElement();
-   String value = w.m_props.getProperty(name);
-   if (value != null && value.length() > 0) {
-    prop.setProperty("PROPERTY", name);
-    prop.setProperty("PVALUE", w.m_props.getProperty(name));
-    sql = makeInsert("RACE_POST_WORK", prop);
-    psqlStmt = connect.prepareStatement(sql);
-    psqlStmt.executeUpdate();
+  prop.setProperty("WORK_COUNT", Lib.ftoa((int) post.m_workCnt, 0));
+  for (int i = 0; i < post.m_workCnt; i++) {
+   Properties props = post.m_work[i].m_props;
+   String workdate = Lib.datetoa(post.m_work[i].m_workDate);
+   String dist = props.getProperty("WORKDISTANCE");
+   String rank = props.getProperty("WORKRANK", "");
+   String workQty = props.getProperty("WORKQTY");
+   if (i == 0) {
+    prop.setProperty("DATE_WORK_1", workdate);
+    prop.setProperty("DISTANCE_1", dist);
+    prop.setProperty("RANK_1", rank);
+    prop.setProperty("QUANTITY_1", workQty);
+   }
+   if (i == 1) {
+    prop.setProperty("DATE_WORK_2", workdate);
+    prop.setProperty("DISTANCE_2", dist);
+    prop.setProperty("RANK_2", rank);
+    prop.setProperty("QUANTITY_2", workQty);
+   }
+   if (i == 2) {
+    prop.setProperty("DATE_WORK_3", workdate);
+    prop.setProperty("DISTANCE_3", dist);
+    prop.setProperty("RANK_3", rank);
+    prop.setProperty("QUANTITY_3", workQty);
+   }
+   if (i == 3) {
+    prop.setProperty("DATE_WORK_4", workdate);
+    prop.setProperty("DISTANCE_4", dist);
+    prop.setProperty("RANK_4", rank);
+    prop.setProperty("QUANTITY_4", workQty);
+   }
+   if (i == 4) {
+    prop.setProperty("DATE_WORK_5", workdate);
+    prop.setProperty("DISTANCE_5", dist);
+    prop.setProperty("RANK_5", rank);
+    prop.setProperty("QUANTITY_5", workQty);
+   }
+   if (i == 5) {
+    prop.setProperty("DATE_WORK_6", workdate);
+    prop.setProperty("DISTANCE_6", dist);
+    prop.setProperty("RANK_6", rank);
+    prop.setProperty("QUANTITY_6", workQty);
    }
   }
+  sql = makeInsert("RACE_POST_WORK", prop);
+  psqlStmt = connect.prepareStatement(sql);
+  psqlStmt.executeUpdate();
  }
  private void insertRacePostTrainerJockeyStats(Race race, Post post,
    TrainerJockeyStats tjs) throws Exception
@@ -821,7 +858,7 @@ public class DatabaseReport
     win = Lib.atoi(tjs.m_props.getProperty("TRAINERWIN"+k, "0"));
     itm = Lib.atoi(tjs.m_props.getProperty("TRAINERITM"+k, "0"));
     roi = Lib.atof(tjs.m_props.getProperty("TRAINERROI"+k, "0"));
-    if (cat.indexOf("Claimed") >= 0) {
+    if (cat.indexOf("Claimed") >= 0 || cat.indexOf("FTS") >= 0) {
        prop.setProperty("CATEGORY", cat); 
        prop.setProperty("WIN_PCT", Lib.ftoa((int) win,0));
        prop.setProperty("ROI", Lib.ftoa((double) roi, 2));
